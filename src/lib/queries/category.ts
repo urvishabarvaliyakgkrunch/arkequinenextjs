@@ -27,6 +27,13 @@ const GET_CATEGORY_PRODUCTS = `
         count
       }
     }
+    tags(first: 20) {
+      nodes {
+        name
+        slug
+        count
+      }
+    }
   }
 `;
 

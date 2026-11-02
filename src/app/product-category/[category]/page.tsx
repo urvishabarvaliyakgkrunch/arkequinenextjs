@@ -4,6 +4,7 @@ import { getCategoryPageData } from "@/lib/queries/category";
 import { parseOrderby } from "@/lib/sorting";
 import ProductGrid from "@/components/shop/ProductGrid";
 import ProductCategoriesSidebar from "@/components/shop/ProductCategoriesSidebar";
+import EducationArticles from "@/components/shop/EducationArticles";
 import PageHeaderBar from "@/components/shop/PageHeaderBar";
 import ShopToolbar from "@/components/shop/ShopToolbar";
 
@@ -41,10 +42,13 @@ export default async function ProductCategoryPage({
             columnsClassName="grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
           />
         </div>
-        <ProductCategoriesSidebar
-          categories={data.productCategories?.nodes ?? []}
-          activeSlug={data.productCategory.slug}
-        />
+        <div className="w-full lg:w-[325px] lg:shrink-0">
+          <ProductCategoriesSidebar
+            categories={data.productCategories?.nodes ?? []}
+            activeSlug={data.productCategory.slug}
+          />
+          <EducationArticles tags={data.tags?.nodes ?? []} />
+        </div>
       </main>
     </>
   );

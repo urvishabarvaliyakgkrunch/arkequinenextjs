@@ -31,6 +31,12 @@ export interface ProductCategorySummary {
   count: number | null;
 }
 
+export interface PostTag {
+  name: string;
+  slug: string;
+  count: number | null;
+}
+
 export interface CategoryPageData {
   productCategory: {
     name: string;
@@ -42,6 +48,9 @@ export interface CategoryPageData {
   } | null;
   productCategories: {
     nodes: ProductCategorySummary[];
+  };
+  tags: {
+    nodes: PostTag[];
   };
 }
 

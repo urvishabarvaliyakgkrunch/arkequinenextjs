@@ -57,7 +57,7 @@ export default function TriggerDropdown({
                   onSelect(option.value);
                   setOpen(false);
                 }}
-                className={`block w-full px-[10px] py-[6px] text-left text-[11px] hover:bg-bg-alt ${
+                className={`block w-full px-[10px] py-[6px] text-left text-[11px] hover:bg-bg-alt hover:font-bold hover:text-ark-title ${
                   option.value === selectedValue ? "font-bold text-ark-title" : "text-ark-btn-text"
                 }`}
               >

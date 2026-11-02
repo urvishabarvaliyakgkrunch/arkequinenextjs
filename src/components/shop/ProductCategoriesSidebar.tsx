@@ -11,7 +11,7 @@ export default function ProductCategoriesSidebar({
   activeSlug?: string;
 }) {
   return (
-    <aside className="w-full lg:w-[325px] lg:shrink-0">
+    <aside>
       <h2 className="mb-2 font-[family-name:var(--f-head)] text-[20px] font-normal uppercase tracking-[1px] text-ark-title">
         Product Categories
       </h2>
@@ -20,7 +20,7 @@ export default function ProductCategoriesSidebar({
           <li key={category.slug} className="py-[1px]">
             <Link
               href={`/product-category/${category.slug}`}
-              className={`text-[12px] leading-[28px] ${
+              className={`text-[12px] leading-[28px] before:mr-1 before:content-['▸'] ${
                 category.slug === activeSlug ? "font-bold" : ""
               } text-[#919191] hover:underline`}
             >
