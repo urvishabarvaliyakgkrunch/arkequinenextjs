@@ -11,7 +11,7 @@ interface ProductMetaProps {
 // Small grey line: SKU, categories, tags
 export default function ProductMeta({ sku, categories, tags }: ProductMetaProps) {
   return (
-    <div className="text-[11px] leading-[28px] text-muted">
+    <div className="text-[11px] leading-[28px] text-meta">
       {sku && <span className="mr-1">SKU: {sku}</span>}
       <TermList label="Categories" basePath="/shop" terms={categories} />
       <TermList label="Tags" basePath="/shop/tag" terms={tags} />

@@ -71,7 +71,17 @@ export interface RelatedProduct {
   slug: string;
   shortDescription: string;
   price: string;
+  regularPrice: string;
+  isOnSale: boolean;
   image: ProductImage | null;
+}
+
+// One post tag shown in the "Education Articles" box
+export interface EducationTag {
+  databaseId: number;
+  name: string;
+  slug: string;
+  count: number;
 }
 
 export interface ProductPageData {
@@ -91,6 +101,7 @@ export interface ProductPageData {
   tags: ProductTerm[];
   tabs: ProductTab[];
   related: RelatedProduct[];
+  educationTags: EducationTag[];
 }
 
 // Raw WPGraphQL shapes
@@ -118,11 +129,16 @@ export interface GqlProduct {
       slug: string;
       shortDescription?: string | null;
       price?: string | null;
+      regularPrice?: string | null;
+      onSale?: boolean | null;
       image?: ProductImage | null;
     }[];
   } | null;
 }
 
 export interface GqlProductResponse {
-  data?: { product: GqlProduct | null } | null;
+  data?: {
+    product: GqlProduct | null;
+    tags?: { nodes: (EducationTag | null)[] } | null;
+  } | null;
 }

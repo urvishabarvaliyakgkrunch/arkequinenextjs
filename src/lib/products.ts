@@ -1,25 +1,26 @@
 // src/lib/products.ts
-import { cacheLife } from "next/cache";
-import { fetchGraphQL } from "@/lib/graphqlClient";
+import { gql } from "@/lib/graphql";
 import { mapProduct } from "@/lib/productMapper";
 import { PRODUCT_PAGE_QUERY } from "@/lib/productQuery";
 import type { GqlProductResponse, ProductPageData } from "@/types/product";
+
+// Product pages refresh about once an hour (rule D1)
+const PRODUCT_PAGE_SECONDS = 3600;
+
+type ProductPageResult = NonNullable<GqlProductResponse["data"]>;
 
 // Single call for the whole product page; returns null when the slug does not exist
 export async function getProductPage(
   slug: string,
 ): Promise<ProductPageData | null> {
-  "use cache";
-  // Product pages refresh about once an hour (rule D1)
-  cacheLife("hours");
+  const data = await gql<ProductPageResult>(
+    PRODUCT_PAGE_QUERY,
+    { slug },
+    { revalidate: PRODUCT_PAGE_SECONDS },
+  );
 
-  const response = await fetchGraphQL<GqlProductResponse>(PRODUCT_PAGE_QUERY, {
-    slug,
-  });
+  // WPGraphQL answers a wrong slug with product = null
+  if (!data?.product) return null;
 
-  // WPGraphQL answers a wrong slug with data.product = null
-  const product = response.data?.product;
-  if (!product) return null;
-
-  return mapProduct(product);
+  return mapProduct(data.product, data.tags?.nodes ?? []);
 }

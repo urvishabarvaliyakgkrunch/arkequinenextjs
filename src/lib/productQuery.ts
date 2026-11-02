@@ -32,10 +32,15 @@ export const PRODUCT_PAGE_QUERY = `
           name
           slug
           shortDescription
+          onSale
           image { ${IMAGE_FIELDS} }
-          ... on ProductWithPricing { price }
+          ... on ProductWithPricing { price regularPrice }
         }
       }
+    }
+    # "Education Articles" box = blog tags, fetched in the same call
+    tags(first: 45, where: { hideEmpty: true, orderby: NAME, order: ASC }) {
+      nodes { databaseId name slug count }
     }
   }
 `;

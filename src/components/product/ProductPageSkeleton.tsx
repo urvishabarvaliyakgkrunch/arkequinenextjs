@@ -9,7 +9,7 @@ export default function ProductPageSkeleton() {
       aria-label="Loading product"
       className="flex-1"
     >
-      <div className="border-y border-border bg-bg-alt">
+      <div className="border-y border-border bg-bg-soft">
         <div className="mx-auto flex min-h-[57px] max-w-[1310px] items-center justify-between px-4 py-2 md:px-[50px]">
           <Skeleton className="h-4 w-20" />
           <Skeleton className="h-3 w-64" />
@@ -18,7 +18,12 @@ export default function ProductPageSkeleton() {
 
       <div className="mx-auto max-w-[1310px] px-4 pt-[50px] md:px-[50px]">
         <div className="grid gap-[50px] lg:grid-cols-[33%_1fr]">
-          <Skeleton className="aspect-square w-full" />
+          <div>
+            <Skeleton className="aspect-square w-full" />
+            <Skeleton className="my-[10px] h-[120px] w-1/3" />
+            <Skeleton className="mb-2 mt-5 h-7 w-3/4" />
+            <Skeleton className="h-[34px] w-full" />
+          </div>
           <div>
             <Skeleton className="mb-[14px] h-[37px] w-2/3" />
             <Skeleton className="my-[12.75px] h-5 w-24" />

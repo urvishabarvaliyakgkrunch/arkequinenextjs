@@ -1,16 +1,22 @@
 // src/lib/graphql.ts
 const WP_GRAPHQL_URL = `${process.env.NEXT_PUBLIC_WP_URL}/graphql`;
 
+// Tag every catalog query so one revalidate call can clear them all
+export const PRODUCTS_TAG = "products";
+
 export async function gql<T>(
   query: string,
   variables: Record<string, unknown> = {},
-  options: { revalidate?: number } = {}
+  options: { revalidate?: number; tags?: string[] } = {}
 ): Promise<T> {
   const res = await fetch(WP_GRAPHQL_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),
-    next: { revalidate: options.revalidate ?? 3600 },
+    next: {
+      revalidate: options.revalidate ?? 3600,
+      tags: options.tags ?? [PRODUCTS_TAG],
+    },
   });
 
   if (!res.ok) {

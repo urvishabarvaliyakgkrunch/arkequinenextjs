@@ -1,5 +1,6 @@
 // src/lib/productMapper.ts
 import type {
+  EducationTag,
   GqlProduct,
   ProductPageData,
   ProductTab,
@@ -36,7 +37,10 @@ function parseCustomTabs(raw: string | null): ProductTab[] {
 }
 
 // Turns the raw GraphQL product into the clean shape the page uses
-export function mapProduct(product: GqlProduct): ProductPageData {
+export function mapProduct(
+  product: GqlProduct,
+  tags: (EducationTag | null)[],
+): ProductPageData {
   const customTabs = parseCustomTabs(readMeta(product, "yikes_woo_products_tabs"));
 
   // Description is always the first tab, like on the live site
@@ -87,7 +91,11 @@ export function mapProduct(product: GqlProduct): ProductPageData {
       slug: item.slug,
       shortDescription: item.shortDescription ?? "",
       price: item.price ?? "",
+      regularPrice: item.regularPrice ?? "",
+      isOnSale: Boolean(item.onSale),
       image: item.image ?? null,
     })),
+    // A tag can come back null when WordPress hides it
+    educationTags: tags.filter((tag): tag is EducationTag => tag !== null),
   };
 }

@@ -22,6 +22,9 @@
   --color-topbar: #e1e1e1;
   --color-border: #e1e1e1;
   --color-dark: #1c1a1c;
+  /* Product page: title bar + inactive tabs, and the quantity box */
+  --color-bg-soft: #fcfcfc;
+  --color-bg-qty: #eeeeee;
 
   --background: #ffffff;
   --foreground: #444444;
@@ -40,6 +43,8 @@
   --color-meta: var(--color-meta);
   --color-label: var(--color-label);
   --color-bg-alt: var(--color-bg-alt);
+  --color-bg-soft: var(--color-bg-soft);
+  --color-bg-qty: var(--color-bg-qty);
   --color-topbar: var(--color-topbar);
   --color-border: var(--color-border);
   --color-dark: var(--color-dark);

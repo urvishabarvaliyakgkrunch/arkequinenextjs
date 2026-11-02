@@ -21,7 +21,7 @@ export default function AddToCartForm({ isInStock }: { isInStock: boolean }) {
           type="button"
           onClick={() => change(-1)}
           aria-label="Decrease quantity"
-          className="size-[43px] cursor-pointer bg-bg-qty text-[13px] text-muted"
+          className="size-[43px] cursor-pointer bg-bg-qty text-[13px] text-meta"
         >
           -
         </button>
@@ -31,13 +31,13 @@ export default function AddToCartForm({ isInStock }: { isInStock: boolean }) {
           value={quantity}
           onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
           aria-label="Product quantity"
-          className="size-[43px] border-x border-border bg-white text-center text-[13px] text-muted [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+          className="size-[43px] border-x border-border bg-white text-center text-[13px] text-meta [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
         />
         <button
           type="button"
           onClick={() => change(1)}
           aria-label="Increase quantity"
-          className="size-[43px] cursor-pointer bg-bg-qty text-[13px] text-muted"
+          className="size-[43px] cursor-pointer bg-bg-qty text-[13px] text-meta"
         >
           +
         </button>
