@@ -13,7 +13,7 @@ export default function ProductBreadcrumb({
   productName,
 }: ProductBreadcrumbProps) {
   return (
-    <div className="border-y border-border bg-bg-alt">
+    <div className="border-y border-border bg-bg-soft">
       <div className="mx-auto flex min-h-[57px] max-w-[1310px] flex-wrap items-center justify-between gap-x-4 px-4 py-2 md:px-[50px]">
         <strong className="font-heading text-base font-normal text-[#666]">
           Products

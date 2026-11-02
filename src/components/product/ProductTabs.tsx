@@ -28,10 +28,10 @@ export default function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
               aria-controls={`panel-${tab.id}`}
               onClick={() => setActiveId(tab.id)}
               // Active tab is white and merges into the panel below it
-              className={`-mr-px cursor-pointer border border-border px-5 pb-[10px] pt-[9px] text-[14px] leading-[28px] text-muted ${
+              className={`-mr-px cursor-pointer border border-border px-5 pb-[10px] pt-[9px] text-[14px] leading-[28px] text-meta ${
                 isActive
                   ? "relative z-10 border-b-white bg-white font-bold"
-                  : "bg-bg-alt"
+                  : "bg-bg-soft"
               }`}
             >
               {tab.title}
@@ -45,7 +45,7 @@ export default function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
         role="tabpanel"
         id={`panel-${activeTab.id}`}
         aria-labelledby={`tab-${activeTab.id}`}
-        className={`-mt-px border border-border bg-white p-[15px] text-ink-body [&_p]:mb-[1em] [&_table]:w-full [&_td]:border [&_td]:border-border [&_td]:p-2 [&_ul]:mb-[1em] [&_ul]:list-disc [&_ul]:pl-6 ${
+        className={`-mt-px border border-border bg-white p-[15px] text-[17px] leading-[28.05px] text-body [&_p]:mb-[1em] [&_table]:w-full [&_td]:border [&_td]:border-border [&_td]:p-2 [&_ul]:mb-[1em] [&_ul]:list-disc [&_ul]:pl-6 ${
           activeTab.hasRawLineBreaks ? "whitespace-pre-line" : ""
         }`}
         dangerouslySetInnerHTML={{ __html: activeTab.content }}

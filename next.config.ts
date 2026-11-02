@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  cacheComponents: true, // enables "use cache" / cacheLife / cacheTag
   images: {
     remotePatterns: [
       {

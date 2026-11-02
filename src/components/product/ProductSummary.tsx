@@ -7,7 +7,7 @@ import type { ProductPageData } from "@/types/product";
 export default function ProductSummary({ product }: { product: ProductPageData }) {
   return (
     <div>
-      <h1 className="mb-[14px] font-heading text-[34px] font-bold leading-[37.4px] text-ink-dark">
+      <h1 className="mb-[14px] font-heading text-[34px] font-bold leading-[37.4px] text-secondary">
         {product.name}
       </h1>
 
@@ -15,7 +15,7 @@ export default function ProductSummary({ product }: { product: ProductPageData }
         <p className="my-[12.75px] text-[15px] font-bold leading-6 text-primary">
           {/* Old price is crossed out only when WooCommerce says it is on sale */}
           {product.isOnSale && product.regularPrice && (
-            <del className="mr-2 font-normal text-muted">{product.regularPrice}</del>
+            <del className="mr-2 font-normal text-meta">{product.regularPrice}</del>
           )}
           {product.price}
         </p>
@@ -23,7 +23,7 @@ export default function ProductSummary({ product }: { product: ProductPageData }
 
       {/* Short text is HTML written in WordPress admin, so it is rendered as HTML */}
       <div
-        className="mb-[25px] text-black [&_p]:m-0"
+        className="mb-[25px] text-[17px] leading-[28.05px] text-black [&_p]:m-0"
         dangerouslySetInnerHTML={{ __html: product.shortDescription }}
       />
 

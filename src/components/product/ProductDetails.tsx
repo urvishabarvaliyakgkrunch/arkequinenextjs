@@ -1,5 +1,6 @@
 // src/components/product/ProductDetails.tsx
 import ProductBreadcrumb from "@/components/product/ProductBreadcrumb";
+import EducationArticles from "@/components/product/EducationArticles";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductSummary from "@/components/product/ProductSummary";
 import ProductTabs from "@/components/product/ProductTabs";
@@ -18,7 +19,10 @@ export default function ProductDetails({ product }: { product: ProductPageData }
       <div className="mx-auto max-w-[1310px] px-4 pt-[50px] md:px-[50px]">
         {/* Image on the left (one third), details on the right */}
         <div className="grid gap-[50px] lg:grid-cols-[33%_1fr]">
-          <ProductGallery images={product.images} productName={product.name} />
+          <div>
+            <ProductGallery images={product.images} productName={product.name} />
+            <EducationArticles tags={product.educationTags} />
+          </div>
           <div>
             <ProductSummary product={product} />
             <ProductTabs tabs={product.tabs} />

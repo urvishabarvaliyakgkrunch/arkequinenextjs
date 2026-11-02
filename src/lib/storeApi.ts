@@ -1,6 +1,8 @@
 // src/lib/storeApi.ts
-// Client-safe cart calls (WooCommerce Store API) — no secret keys, used from "use client" components only.
-const STORE_API = `${process.env.NEXT_PUBLIC_WP_URL}/wp-json/wc/store/v1`;
+// Client-safe cart calls — routed through our own /api/cart/* proxy (src/app/api/cart/) rather than
+// the WP backend directly: the backend's real Store API responses don't send Access-Control-Allow-Origin
+// (only its OPTIONS preflight does), so a direct cross-origin browser fetch fails with "Failed to fetch".
+const STORE_API = "/api/cart";
 
 export interface StoreApiCartItem {
   key: string;
@@ -52,7 +54,7 @@ async function storeFetch(path: string, options: RequestInit = {}): Promise<Stor
 }
 
 export async function getCart(): Promise<StoreApiCart> {
-  return storeFetch("/cart");
+  return storeFetch("");
 }
 
 export async function addToCart(id: number, quantity = 1): Promise<StoreApiCart> {
@@ -60,7 +62,7 @@ export async function addToCart(id: number, quantity = 1): Promise<StoreApiCart>
   if (!localStorage.getItem(NONCE_KEY)) {
     await getCart();
   }
-  return storeFetch("/cart/add-item", {
+  return storeFetch("/add-item", {
     method: "POST",
     body: JSON.stringify({ id, quantity }),
   });
