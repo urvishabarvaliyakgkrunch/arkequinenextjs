@@ -1,6 +1,7 @@
 /* src/app/globals.css */
 @import "tailwindcss";
 
+/* Colors measured from the live site (arkequine.getkgkrunch.com) */
 :root {
   /* Brand — measured from https://ark-equine.com */
   --color-primary: #0fa7ac;
@@ -44,11 +45,28 @@
   --color-dark: var(--color-dark);
   --font-sans: var(--font-lato);
   --font-heading: var(--font-millar), Helvetica, Arial, sans-serif;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-lato: var(--font-lato);
+
+  /* Shop/product design tokens — measured live from arkequine.getkgkrunch.com/shop/ */
+  --color-ark-title: #2e2f92;
+  --color-ark-price: #0fa7ac;
+  --color-ark-price-strike: #919191;
+  --color-ark-border: #e1e1e1;
+  --color-ark-btn-text: #57585a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-lato), Helvetica, Arial, sans-serif;
+  font-family: var(--font-lato), Arial, Helvetica, sans-serif;
 }
 
