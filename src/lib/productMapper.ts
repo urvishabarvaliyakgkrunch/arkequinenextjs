@@ -87,7 +87,7 @@ export function mapProduct(product: GqlProduct): ProductPageData {
       slug: item.slug,
       shortDescription: item.shortDescription ?? "",
       price: item.price ?? "",
-      image: item.image,
+      image: item.image ?? null,
     })),
   };
 }
