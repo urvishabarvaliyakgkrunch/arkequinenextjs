@@ -44,3 +44,85 @@ export interface CategoryPageData {
     nodes: ProductCategorySummary[];
   };
 }
+
+// ---- Single product page ----
+export interface ProductImage {
+  sourceUrl: string;
+  altText: string | null;
+  mediaDetails?: { width: number | null; height: number | null } | null;
+}
+
+export interface ProductTerm {
+  databaseId: number;
+  name: string;
+  slug: string;
+}
+
+export interface ProductTab {
+  id: string;
+  title: string;
+  content: string;
+  hasRawLineBreaks: boolean;
+}
+
+export interface RelatedProduct {
+  databaseId: number;
+  name: string;
+  slug: string;
+  shortDescription: string;
+  price: string;
+  image: ProductImage | null;
+}
+
+export interface ProductPageData {
+  databaseId: number;
+  type: ProductTypename;
+  name: string;
+  slug: string;
+  sku: string;
+  shortDescription: string;
+  price: string;
+  regularPrice: string;
+  isOnSale: boolean;
+  isInStock: boolean;
+  images: ProductImage[];
+  categories: ProductTerm[];
+  primaryCategory: ProductTerm | null;
+  tags: ProductTerm[];
+  tabs: ProductTab[];
+  related: RelatedProduct[];
+}
+
+// Raw WPGraphQL shapes
+export interface GqlProduct {
+  __typename: ProductTypename;
+  databaseId: number;
+  name: string;
+  slug: string;
+  sku?: string | null;
+  description?: string | null;
+  shortDescription?: string | null;
+  onSale?: boolean | null;
+  image?: ProductImage | null;
+  galleryImages?: { nodes: ProductImage[] } | null;
+  productCategories?: { nodes: ProductTerm[] } | null;
+  productTags?: { nodes: ProductTerm[] } | null;
+  metaData?: { key: string; value: string | null }[] | null;
+  price?: string | null;
+  regularPrice?: string | null;
+  stockStatus?: string | null;
+  related?: {
+    nodes: {
+      databaseId: number;
+      name: string;
+      slug: string;
+      shortDescription?: string | null;
+      price?: string | null;
+      image?: ProductImage | null;
+    }[];
+  } | null;
+}
+
+export interface GqlProductResponse {
+  data?: { product: GqlProduct | null } | null;
+}
