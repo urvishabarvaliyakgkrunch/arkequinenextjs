@@ -4,18 +4,34 @@
 // (only its OPTIONS preflight does), so a direct cross-origin browser fetch fails with "Failed to fetch".
 const STORE_API = "/api/cart";
 
+export interface StoreApiMoney {
+  currency_minor_unit: number;
+  currency_symbol: string;
+}
+
 export interface StoreApiCartItem {
   key: string;
   id: number;
   quantity: number;
+  quantity_limits: { minimum: number; maximum: number };
   name: string;
-  images: { src: string }[];
+  permalink: string;
+  images: { thumbnail: string; alt: string }[];
+  prices: StoreApiMoney & { price: string };
+  totals: StoreApiMoney & { line_subtotal: string };
 }
 
 export interface StoreApiCart {
   items: StoreApiCartItem[];
   items_count: number;
-  totals: { total_price: string; currency_minor_unit: number };
+  coupons: { code: string; totals: { total_discount: string } }[];
+  totals: StoreApiMoney & { total_price: string; total_discount: string };
+}
+
+// Store API amounts are integer minor units (e.g. "1444" = €14.44) — divide by 10^currency_minor_unit.
+export function formatMoney(amount: string, money: StoreApiMoney): string {
+  const value = Number(amount) / 10 ** money.currency_minor_unit;
+  return `${money.currency_symbol}${value.toFixed(money.currency_minor_unit)}`;
 }
 
 // Headless frontend + separate WP origin means no shared cookie jar — the Store API's own
@@ -53,17 +69,30 @@ async function storeFetch(path: string, options: RequestInit = {}): Promise<Stor
   return res.json();
 }
 
+async function ensureNonce() {
+  if (!localStorage.getItem(NONCE_KEY)) await getCart();
+}
+
 export async function getCart(): Promise<StoreApiCart> {
   return storeFetch("");
 }
 
 export async function addToCart(id: number, quantity = 1): Promise<StoreApiCart> {
-  // A POST needs a nonce issued by a prior GET — fetch one first on a fresh session.
-  if (!localStorage.getItem(NONCE_KEY)) {
-    await getCart();
-  }
-  return storeFetch("/add-item", {
-    method: "POST",
-    body: JSON.stringify({ id, quantity }),
-  });
+  await ensureNonce();
+  return storeFetch("/add-item", { method: "POST", body: JSON.stringify({ id, quantity }) });
+}
+
+export async function updateItemQuantity(key: string, quantity: number): Promise<StoreApiCart> {
+  await ensureNonce();
+  return storeFetch("/update-item", { method: "POST", body: JSON.stringify({ key, quantity }) });
+}
+
+export async function removeItem(key: string): Promise<StoreApiCart> {
+  await ensureNonce();
+  return storeFetch("/remove-item", { method: "POST", body: JSON.stringify({ key }) });
+}
+
+export async function applyCoupon(code: string): Promise<StoreApiCart> {
+  await ensureNonce();
+  return storeFetch("/apply-coupon", { method: "POST", body: JSON.stringify({ code }) });
 }

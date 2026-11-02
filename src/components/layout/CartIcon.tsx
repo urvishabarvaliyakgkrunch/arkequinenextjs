@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { useCartStore } from "@/store/cart";
 
 export default function CartIcon() {
@@ -13,8 +14,8 @@ export default function CartIcon() {
   }, [hydrate]);
 
   return (
-    <a
-      href="#"
+    <Link
+      href="/cart"
       aria-label="Shopping Cart"
       className="relative flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[2px] border border-border bg-white text-ink-dark lg:absolute lg:top-1/2 lg:-right-[2px] lg:-translate-y-1/2"
     >
@@ -32,6 +33,6 @@ export default function CartIcon() {
           {count}
         </span>
       )}
-    </a>
+    </Link>
   );
 }

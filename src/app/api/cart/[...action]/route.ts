@@ -1,13 +1,15 @@
-// src/app/api/cart/add-item/route.ts
-// Same-origin proxy for POST /wc/store/v1/cart/add-item — see src/app/api/cart/route.ts for why this exists.
+// src/app/api/cart/[...action]/route.ts
+// Same-origin proxy for POST /wc/store/v1/cart/<action> (add-item, update-item, remove-item, apply-coupon,
+// remove-coupon) — see src/app/api/cart/route.ts for why this proxy exists at all.
 const STORE_API = `${process.env.NEXT_PUBLIC_WP_URL}/wp-json/wc/store/v1`;
 
-export async function POST(request: Request) {
+export async function POST(request: Request, { params }: { params: Promise<{ action: string[] }> }) {
+  const { action } = await params;
   const nonce = request.headers.get("Nonce");
   const cartToken = request.headers.get("Cart-Token");
   const body = await request.text();
 
-  const res = await fetch(`${STORE_API}/cart/add-item`, {
+  const res = await fetch(`${STORE_API}/cart/${action.join("/")}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

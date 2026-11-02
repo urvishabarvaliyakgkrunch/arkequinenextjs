@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ProductCardFields } from "@/types/product";
 import { stripHtml } from "@/lib/stripHtml";
 import AddToCartButton from "@/components/cart/AddToCartButton";
+import AddToCartOverlay from "@/components/cart/AddToCartOverlay";
 
 // Shared by the shop page and every category page — one card design, used everywhere products are listed.
 export default function ProductCard({ product }: { product: ProductCardFields }) {
@@ -29,6 +30,7 @@ export default function ProductCard({ product }: { product: ProductCardFields })
               <PlaceholderIcon />
             </div>
           )}
+          <AddToCartOverlay productId={product.databaseId} />
         </div>
 
         <div className="flex flex-1 flex-col gap-2 px-4 pb-4 pt-[15px]">
