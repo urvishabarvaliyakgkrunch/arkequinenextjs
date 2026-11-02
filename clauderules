@@ -1,0 +1,669 @@
+# ARK Equine — Project Rules
+# Next.js 14 + TypeScript + Tailwind + WooCommerce Headless
+# Backend: WordPress + WooCommerce at https://arkequine.getkgkrunch.com (this is the ONLY backend — no local WP for this project)
+
+# ═════════════════════════════════════════════
+# SECTION 0: HARD RULES — read first, no exceptions
+# ═════════════════════════════════════════════
+
+## 0.1 NEVER place a real order / complete a real payment
+
+  The user places every real order / test payment themselves, by hand. Never
+  complete one on the live WooCommerce checkout (or any hosted payment page it
+  redirects to, e.g. Stripe).
+
+  NOT ALLOWED:
+  - Clicking "Place Order" / "Pay" on checkout
+  - Submitting card numbers (even Stripe test cards) anywhere on checkout
+  - Any step whose next click would create a real order or charge
+
+  ALLOWED (needed to build and debug):
+  - Reading product, cart, and checkout pages to verify data (price, stock, totals)
+  - Calling WooCommerce Store API / REST API read endpoints
+  - Adding items to a cart to inspect the response, as long as checkout is never submitted
+
+  If a check cannot be done without ordering, stop and hand it to the user with
+  the exact steps instead of doing it.
+
+## 0.2 Claude NEVER touches git — no commit, no push, no branch, nothing
+
+  The user does ALL git operations manually: staging, committing, branching,
+  pushing. Claude must never run `git add`, `git commit`, `git push`, or any
+  other git command that changes repo state, even if asked to "save progress."
+  If git history needs to change, tell the user what to run — do not run it.
+
+## 0.3 Internal / instruction files NEVER go to git
+
+  The client does not need our working docs. Anything created that is an
+  instruction, guide, report, context note, or backend hand-off (PDF, DOC/DOCX,
+  MD, HTML export, ZIP, plugin zips, etc.) is for us only.
+
+  RULE: the moment such a file is created, add it to .gitignore in the SAME step
+  (exact filename, under "Internal working docs"). Since Claude never commits
+  (see 0.2), this just means: never leave it in a place the user's own `git add`
+  could accidentally pick up — gitignore it immediately.
+
+  Examples: *-CONTEXT.md, *-BACKEND.md, *-REPORT.*, testing-instructions.pdf,
+  roadmap exports, local backup zips, this `clauderules` file itself.
+  Real source code (src/, public/) is the only thing meant to be committed.
+
+# ─────────────────────────────────────────────
+# SECTION G: DESIGN SYSTEM — PIXEL PERFECT (extract live from the real site)
+# Rule: match the live site exactly. No guessing, no approximation.
+# ─────────────────────────────────────────────
+
+## G0. There are no pre-measured tokens yet — go get them
+
+  Unlike a project where colors/fonts/spacing are already extracted, ark-equine's
+  values below are NOT yet measured. Before building any component:
+
+  1. Open the real pages in a browser (localhost.arkequine0211.com or
+     https://ark-equine.com) with devtools and read the actual computed styles —
+     colors, fonts, spacing, radius, button styles — element by element.
+  2. Cross-check against the site's own source so values aren't invented:
+     - `wp-content/themes/enfold-child/assets/css/kg_custom.css` — site-wide overrides
+     - `wp-content/themes/enfold-child/assets/js/kg-custom.js`
+     - `wp-content/themes/enfold-child/templates/template-home-landing.php` — has
+       inline CSS design tokens for the "ARK Equine" landing hero (fonts: Millar,
+       Lato; teal/graphite palette) — a real starting point, verify against live render
+     - `wp-content/themes/enfold-child/template-arioneo*.php` + `arioneo/` folder —
+       separate branded landing page, own fonts/colors
+     - Enfold parent theme options (Theme Options in wp-admin) for the base palette
+  3. Once measured, write the exact values into `src/app/globals.css` as :root CSS
+     variables (same pattern as below) and extend Tailwind config to reference them.
+  4. NEVER hardcode a hex code directly in a component — always use the token name.
+  5. Fill in G1–G12 below with real measured numbers as pages are built. Do not
+     guess a value "close enough" — re-measure.
+
+## G1. Color Tokens — fill in after measuring (template below)
+
+  /* Brand — TODO: measure from live site */
+  --color-primary:        /* TBD — main brand color, header/CTA accents */
+  --color-primary-alt:    /* TBD — hover state variant */
+
+  /* Text */
+  --color-ink:             /* TBD — primary body text */
+  --color-ink-dark:        /* TBD — headings */
+  --color-muted:           /* TBD — secondary/helper text */
+
+  /* Surfaces */
+  --color-white:   #FFFFFF
+  --color-bg-alt:          /* TBD — subtle section background */
+  --color-border:          /* TBD — dividers, borders */
+  --color-dark:            /* TBD — dark section backgrounds, if used */
+
+  RULE: Define all of these in src/app/globals.css as :root CSS variables.
+        In Tailwind config, extend colors to reference these vars.
+        Never use a hex code directly in a component — always use the token name.
+
+## G2. Typography — Fonts (confirm exact family/weights from live site CSS)
+
+  Likely candidates based on theme source (verify before locking in):
+  --f-body:   Lato or similar sans-serif   → body text, nav, UI labels
+  --f-head:   Millar or Enfold default     → headings (h1-h4)
+
+  LOADING: use next/font (next/font/google or next/font/local for any non-Google
+  font like Millar) — NOT a <link> tag or @import.
+
+  src/app/layout.tsx — load fonts via next/font, assign as CSS variables.
+
+## G3. Type Scale — measure exact px/line-height/letter-spacing per heading level
+  from the live rendered pages before writing CSS. Do not approximate.
+
+## G4. Border Radius, G5. Buttons, G6. Spacing, G7. Header/Nav, G8. Product Card,
+  G9. Section backgrounds — same rule as G1/G3: measure from the live site,
+  record exact values here as each section is built, never approximate.
+
+## G10. Responsive Breakpoints (Tailwind — standard, no need to re-measure)
+
+  sm:   640px   → small phones
+  md:   768px   → tablets
+  lg:   1024px  → desktop
+  xl:   1280px  → wide desktop
+  2xl:  1536px  → ultra wide (rarely needed)
+
+  Mobile-first: write base styles for mobile, override at md: and lg:
+
+# ─────────────────────────────────────────────
+# SECTION H: ENVIRONMENTS & API SETUP
+# ─────────────────────────────────────────────
+
+## H1. Environment URLs
+
+  BACKEND (single source for all environments — dev, preview, prod all point here):
+    WordPress backend:   https://arkequine.getkgkrunch.com
+    WP REST base:        https://arkequine.getkgkrunch.com/wp-json/wp/v2
+    WC REST base:        https://arkequine.getkgkrunch.com/wp-json/wc/v3
+    WC Store API base:   https://arkequine.getkgkrunch.com/wp-json/wc/store/v1
+
+  FRONTEND:
+    Next.js dev:         http://localhost:3000
+    Next.js live:        Vercel (project URL set up in the Vercel steps — see DEPLOY.md)
+
+  NOTE: WPGraphQL is NOT currently installed on this backend (confirmed by plugin
+  audit). Default to the WordPress REST API + WooCommerce REST API / Store API.
+  If GraphQL is wanted later, it requires installing WPGraphQL + WPGraphQL for
+  WooCommerce first — treat that as a separate decision, not assumed.
+
+## H2. Environment Variables — .env.local (never commit this file)
+
+  # ── Backend URLs ──────────────────────────────────
+  NEXT_PUBLIC_WP_URL=https://arkequine.getkgkrunch.com
+
+  # ── WooCommerce REST API keys (read-only) ─────────
+  # Generate in: WP Admin → WooCommerce → Settings → Advanced → REST API
+  # Permission: Read only (shop pages don't need write)
+  WC_CONSUMER_KEY=ck_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  WC_CONSUMER_SECRET=cs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+  # ── Site config ───────────────────────────────────
+  NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+  For production: duplicate above with live values in hosting env.
+  For each env: LOCAL / PREVIEW / PRODUCTION — set separately.
+
+## H3. API Strategy — WooCommerce REST API + WP REST API
+
+  THIS PROJECT USES: WordPress REST API (wp/v2) + WooCommerce REST API (wc/v3)
+  and/or WooCommerce Store API (wc/store/v1) for cart.
+
+  WHY REST over GraphQL here: WPGraphQL is not installed on this backend. Adding
+  it is a backend change that needs a decision first — don't assume it exists.
+
+  - wc/v3   → server-side only (needs Consumer Key/Secret) — products, categories,
+              full product data for listing/detail pages
+  - wc/store/v1 → public, cookie-based cart — use for cart add/update/remove from
+              client-side without exposing REST API keys in the browser
+  - wp/v2   → pages, posts, media, menus (nav), global site content
+
+## H4. REST client setup in Next.js
+
+  PATTERN for server-side product/category calls (src/lib/woocommerce.ts):
+
+    const WC_AUTH = Buffer.from(
+      `${process.env.WC_CONSUMER_KEY}:${process.env.WC_CONSUMER_SECRET}`
+    ).toString("base64");
+
+    export async function getProducts(params = "") {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_WP_URL}/wp-json/wc/v3/products${params}`,
+        {
+          headers: { Authorization: `Basic ${WC_AUTH}` },
+          next: { revalidate: 3600 },
+        }
+      );
+      if (!res.ok) throw new Error(`WC products fetch failed: ${res.status}`);
+      return res.json();
+    }
+
+  This code and ALL wc/v3 calls go in src/lib/woocommerce.ts — server-only file.
+  NEVER call wc/v3 with the Consumer Key/Secret from a client component.
+
+  PATTERN for cart (client-safe, Store API, src/lib/storeApi.ts):
+
+    export async function addToCart(id: number, quantity: number) {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_WP_URL}/wp-json/wc/store/v1/cart/add-item`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include", // Store API uses a cart cookie/nonce
+          body: JSON.stringify({ id, quantity }),
+        }
+      );
+      return res.json();
+    }
+
+  Store API handles its own cart session via cookie + nonce — read the nonce
+  from the first GET /wc/store/v1/cart response and send it back as
+  `X-WC-Store-API-Nonce` on mutating requests.
+
+## H5. Call rules — who fetches what
+
+  GOLDEN RULE: 1 page = 1-2 fetch calls max. Components never fetch — they only
+  receive props.
+
+  ── Call pattern per Phase 1 page ───────────────────────────────────
+  Homepage        → 1-2 calls (featured/bestseller products + nav/global data)
+  Shop/Category   → 1 call (products list + categories, via query params)
+  Product page    → 1 call (single product by slug/id, incl. variations)
+  Cart page       → Store API, client-side, no server fetch needed on load if
+                     cart state is read from the Store API cart cookie on mount
+  Header + Footer → fetched once in layout.tsx (nav menu, footer content),
+                     shared across all pages via layout, not re-fetched per page
+
+  ── Who is allowed to fetch ─────────────────────────────────────────
+  ✅ src/app/*/page.tsx          → server component, calls a lib/ function ONCE
+  ✅ src/app/layout.tsx          → for nav/footer global data only
+  ✅ src/hooks/use*.ts           → client-side mutations (cart)
+  ❌ src/components/**/*         → NEVER — receives props only
+  ❌ Inline in JSX               → NEVER — no fetch() inside return()
+
+  ── Folder structure for API calls ──────────────────────────────────
+  src/lib/
+  ├── woocommerce.ts   ← server-only, wc/v3 calls (products, categories)
+  ├── storeApi.ts      ← client-safe, wc/store/v1 calls (cart)
+  ├── wordpress.ts      ← wp/v2 calls (pages, menus, posts if needed)
+  └── formatPrice.ts    ← currency display logic
+
+  Rule: every exported function in lib/ wraps fetch() with a clear name.
+  No raw fetch() calls anywhere except inside lib/ files.
+
+  ── Cache values by data type ────────────────────────────────────────
+  { revalidate: 86400 } → 24 hours  — header/footer nav, global site content
+  { revalidate: 3600  } → 1 hour    — shop listing, product detail, categories
+  { cache: "no-store" } → always fresh — cart reads/mutations
+
+  ── Parallel calls: only when truly independent ──────────────────────
+  const [product, nav] = await Promise.all([
+    getProductBySlug(slug),
+    getGlobalNav(),
+  ]);
+  Never await one then the other if they don't depend on each other.
+
+  ── Page file pattern (always thin) ──────────────────────────────────
+  // src/app/shop/page.tsx
+  import { getProducts } from "@/lib/woocommerce"
+  import ProductGrid from "@/components/shop/ProductGrid"
+
+  export default async function ShopPage() {
+    const products = await getProducts()     // ← 1 call, all data
+    return <ProductGrid products={products.data} />
+  }
+  // No logic here. No second fetch. Components get props, nothing else.
+
+## H6. Dynamic Content Rule — nothing hardcoded that lives in WordPress
+
+  RULE: Every piece of content that an admin should be able to change later
+  (menu links, footer text, homepage hero/featured products, product data) must
+  come from WordPress, not be hardcoded in a Next.js file.
+
+  WHAT THIS MEANS for Phase 1 pages:
+  - Header nav links          → WP Menu (wp/v2/menus or menu-items), not hardcoded array
+  - Footer links/text         → WP Menu + a footer content source (page/ACF if needed)
+  - Homepage featured/bestseller products → WooCommerce REST (category or featured flag)
+  - Shop/category products    → WooCommerce REST, live data
+  - Product page content      → WooCommerce REST (name, price, description, images,
+                                 variations, stock) — never hardcode a product's copy
+  - Cart                      → Store API live cart, never a hardcoded/sample cart
+
+  NEVER DO THIS in any Next.js file:
+    <h1>Welcome to ARK Equine</h1>              ← hardcoded = wrong if it should be editable
+    const navLinks = ["Shop", "About", "Blog"]   ← hardcoded = wrong
+    src="/images/hero-banner.jpg"                 ← hardcoded = wrong if admin uploads it
+
+  ALWAYS DO THIS:
+    <h1>{data.heroHeadline}</h1>                 ← from WP/WC data
+    {menuItems.map(item => <NavLink ... />)}      ← from WP Menu
+    <Image src={product.images[0].src} />         ← from WC product data
+
+  EXCEPTION: pure UI chrome with no admin-editable meaning (e.g. "Add to Cart"
+  button label, "Qty" label) can stay as plain text — it's UI copy, not content.
+
+## H7. Confirming the setup works (first thing to do before any component work)
+
+  STEP 1: Visit https://arkequine.getkgkrunch.com/wp-json/wp/v2/types in browser
+    → Should return JSON listing post, page, product, etc. = WP REST API is live ✓
+
+  STEP 2: Visit https://arkequine.getkgkrunch.com/wp-json/wc/v3/products with
+    Basic Auth (Consumer Key/Secret) → should return product list = WC REST is live ✓
+
+  STEP 3: Visit https://arkequine.getkgkrunch.com/wp-json/wc/store/v1/cart (no
+    auth needed) → should return an empty cart object = Store API is live ✓
+
+  STEP 4: If any fails → fix the backend (install/activate the right plugin or
+    generate REST keys) before writing any Next.js code.
+
+# ─────────────────────────────────────────────
+# SECTION A: PROJECT ARCHITECTURE RULES
+# ─────────────────────────────────────────────
+
+## A1. Backend stays WordPress — never move logic to Next.js
+- WordPress + WooCommerce = data, pricing, stock, order creation, plugin logic
+- Next.js = display only (catalog, PDP, cart UI)
+- Never replicate server-side plugin logic in Next.js:
+  - Wholesale role pricing (WooCommerce Wholesale Prices/Premium)
+  - Subscription pricing/billing (WooCommerce Subscriptions)
+  - Multi-currency conversion (CURCY)
+  - Discount/coupon rules (Discount Rules for WooCommerce, Advanced Coupons)
+  - Min/max quantity validation (WooCommerce Min and Max Quantities)
+  All of the above: read the already-calculated value from the WC REST/Store API
+  response. Never compute a price or a discount in Next.js.
+
+## A2. Checkout strategy — decide before Phase 2, not assumed in Phase 1
+- Phase 1 scope stops at the Cart page. Checkout/payment flow (Stripe via
+  Payment Plugins for Stripe WooCommerce) is a Phase 2 decision: either redirect
+  to WordPress's own checkout page, or build a custom Next.js checkout against
+  the Store API. Do not build checkout until this is explicitly decided.
+
+## A3. Cart — Store API only, no custom cart logic duplicated server-side
+- Cart state is whatever the WooCommerce Store API session says. Zustand (or
+  equivalent) only mirrors it client-side for instant UI feedback — it is not
+  the source of truth.
+- Always carry the correct `id` (variation id for variable/subscription products,
+  not the parent product id) when adding to cart.
+
+## A4. Auth is out of scope for Phase 1
+- Wholesale pricing requires a logged-in customer with the wholesale role. Phase
+  1 shows guest/retail pricing only. Don't build login/JWT auth until it's
+  scoped — that's Phase 2+ work.
+
+# ─────────────────────────────────────────────
+# SECTION B: CODE QUALITY RULES
+# ─────────────────────────────────────────────
+
+## B1. File size limit — 200 lines max
+- Hard limit: 200 lines per file. Over 200 = split the file.
+- Split by extracting: sub-components into their own files, helpers into lib/, hooks into hooks/
+- Exception: auto-generated files (next.config.ts, etc.)
+
+## B2. Component-first — no copy-paste markup
+- Every repeating UI piece = its own component file
+- One component per file. File name = component name (PascalCase)
+- Even a small reusable button with special logic = its own file in src/components/ui/
+
+## B3. Path comment — first line of every file
+- Line 1 of every file must be a comment showing its own path (relative to src/)
+
+  EXAMPLES:
+    // src/components/shop/ProductCard.tsx
+    // src/lib/woocommerce.ts
+    // src/store/cart.ts
+    // src/hooks/useCart.ts
+
+## B4. Comments — simple English, one line, WHY not WHAT
+- Write a comment only when the WHY is not obvious from the code
+- Use plain simple English — any developer must understand it
+- Maximum one short line per comment — no paragraph blocks
+- Never describe what the code does. Describe why it does it.
+
+  GOOD: // Store API needs the variation id, not the parent product id, for variable products
+  GOOD: // WC returns a flat list; grouped here so the category filter UI works
+  BAD:  // This function maps over the products array and returns JSX for each product
+  BAD:  // set loading to true  (self-explanatory — no comment needed)
+
+## B5. Folder structure — never mix concerns
+
+  src/
+  ├── app/          → routes only (page.tsx, layout.tsx, loading.tsx, error.tsx)
+  ├── components/   → UI components, grouped by feature
+  │   ├── layout/   → Header, Footer, Nav
+  │   ├── shop/     → ProductCard, ProductGrid, CategoryFilter
+  │   ├── cart/     → CartItem, CartSummary, CartDrawer
+  │   ├── product/  → ProductImages, ProductInfo
+  │   └── ui/       → Button, Badge, Spinner (generic reusables)
+  ├── lib/          → API clients and pure utility functions
+  ├── hooks/        → custom React hooks (useCart, useProduct, etc.)
+  ├── store/        → Zustand stores only
+  └── types/        → TypeScript interfaces only
+
+  RULES:
+  - app/        → calls components. NO inline JSX logic.
+  - lib/        → pure functions. NO React, NO hooks, NO JSX.
+  - components/ → receives props. NO direct fetch() calls.
+  - hooks/      → state and side effects. Calls lib/ for data.
+
+## B6. Naming conventions
+
+  Component file   → PascalCase          ProductCard.tsx
+  Hook file        → use + camelCase     useCart.ts
+  Lib/util file    → camelCase           woocommerce.ts, formatPrice.ts
+  Store file       → camelCase           cart.ts
+  Type/Interface   → PascalCase          Product, CartItem, WCVariation
+  Constant         → UPPER_SNAKE_CASE    WC_API_URL, REVALIDATE_SHOP
+  CSS              → Tailwind utilities only, no custom class names
+
+## B7. Page files must be thin — no logic inside
+- page.tsx = fetch data (if needed) + pass to component. Nothing else.
+- No business logic, no long JSX trees, no inline styles in page files.
+
+## B8. TypeScript — no `any`, ever
+- All API response types in src/types/
+- Write the interface first, then write the function
+- If type is unknown: use `unknown` and narrow it — never `any`
+
+## B9. Server Components by default — `"use client"` only when required
+- Default: Server Component (no directive needed)
+- Add "use client" ONLY when the component uses: useState, useEffect, event handlers, Zustand
+- Cart, interactive buttons, drawers = client components
+- Product pages, shop listing, homepage sections = server components (faster load)
+
+## B10. Environment variables — two strict categories
+
+  NEXT_PUBLIC_ prefix  → visible in browser + server  → safe to expose (site URL, WP URL)
+  no prefix            → server only                   → secrets (WC keys)
+
+  NEVER use a secret key inside a Client Component ("use client" file)
+  API calls with secret keys → lib/ functions → called from Server Components or Route Handlers only
+
+# ─────────────────────────────────────────────
+# SECTION C: ONE SOURCE OF TRUTH (mandatory)
+# ─────────────────────────────────────────────
+
+## C1. Each concern has exactly one home
+
+  WooCommerce REST calls (server) → src/lib/woocommerce.ts   (only file using WC keys)
+  WooCommerce Store API (cart)    → src/lib/storeApi.ts
+  WordPress REST calls            → src/lib/wordpress.ts     (menus, pages)
+  Cart state                      → src/store/cart.ts        (Zustand, mirrors Store API)
+  Price formatting                → src/lib/formatPrice.ts
+
+## C2. No scattered fetch() calls
+- If two places need the same data → extract to lib/ and import
+- Never duplicate an API call across components or pages
+
+# ─────────────────────────────────────────────
+# SECTION D: PERFORMANCE RULES
+# ─────────────────────────────────────────────
+
+## D1. ISR (Incremental Static Regeneration) for catalog pages
+- Shop/category listing  → revalidate: 3600   (rebuild every 1 hour)
+- Product detail page    → revalidate: 3600
+- Homepage sections      → revalidate: 86400  (rebuild every 24 hours)
+- Header/Footer nav      → revalidate: 86400
+- Cart                   → no cache, "use client", real-time only
+
+## D2. Images — next/image only, never <img>
+- Every image = <Image> from "next/image"
+- Add the WordPress domain to next.config.ts images.remotePatterns
+  (arkequine.getkgkrunch.com)
+- Always set width + height (or fill) to avoid layout shift
+
+## D3. Fonts — next/font only, never a <link> tag
+- Load all fonts via next/font/google or next/font/local
+- No Google Fonts <link> in layout.tsx
+- This eliminates font-related layout shift and speeds up LCP
+
+# ─────────────────────────────────────────────
+# SECTION I: LOADING STATES & SKELETONS (MANDATORY — never ship a page without one)
+# Rule: a click must NEVER look ignored. The page changes at once, and grey
+#       skeleton holds the layout until the real data arrives.
+# ─────────────────────────────────────────────
+
+## I1. The contract — this is not optional
+
+  User clicks ANY link
+      → the new page opens IMMEDIATELY (never wait on the old page)
+      → its skeleton shows while the data loads
+      → the real content replaces the skeleton in the SAME layout
+
+  Never allowed:
+  - A blank white screen while data loads
+  - The old page frozen on screen after a click
+  - A bare spinner in the middle of an empty page
+  - An empty div used as a placeholder (e.g. <div className="min-h-[380px]" />)
+  - "No products found" / "Your cart is empty" shown BEFORE the data has loaded
+
+## I2. Every route needs a loading.tsx — no exceptions
+
+  src/app/<route>/loading.tsx  → renders that route's skeleton component
+
+  A route is NOT done until its loading.tsx exists. This is part of the task,
+  not a polish step for later. Add it in the SAME step as the page.
+
+  Phase 1 routes that need one:
+    src/app/loading.tsx            (homepage)
+    src/app/shop/loading.tsx
+    src/app/shop/[category]/loading.tsx
+    src/app/product/[slug]/loading.tsx
+    src/app/cart/loading.tsx
+
+## I3. Client-side waits need a skeleton too
+
+  loading.tsx only covers server navigation. ALSO show a skeleton when:
+  - Reading the cart from the Store API / localStorage (first client render)
+  - A fetch inside a hook is still running
+  - A "use client" component has data that is not ready yet
+
+  Pattern:
+    const hasMounted = useHasMounted();
+    if (!hasMounted) return <XyzSkeleton />;   // never an empty div
+
+## I4. Skeleton must MATCH the real layout, pixel for pixel
+
+- Copy the real component's wrapper classes: grid columns, gaps, padding, min-height
+- Same number of placeholder rows/cards as the page normally shows
+- Nothing may jump or resize when real data lands (zero layout shift)
+- Vary the bar widths (w-20 / w-24 / w-16) so it reads like text, not a barcode
+
+## I5. Build skeletons from shared primitives — never hand-roll
+
+  src/components/ui/Skeleton.tsx   → one grey shimmering block (size via className)
+  src/components/ui/Spinner.tsx    → small ring, ONLY inside buttons
+
+  Rules:
+  - Never write a raw animated grey <div>; always use <Skeleton />
+  - One skeleton file per component, named <Component>Skeleton.tsx,
+    living next to the component it mirrors
+  - Skeleton files are Server Components — no "use client", no props, no logic
+
+## I6. Buttons that start work must say so
+
+- A button that triggers a request switches to a pending label + <Spinner />
+  (e.g. "Add to Cart" → "Adding…", "Update Cart" → "Updating…")
+- Disable it while pending so it cannot be double-clicked
+- NEVER let a pending state change an element's width in the header or nav —
+  that makes the menu twitch. Colour/label only, or position the spinner absolutely.
+
+## I7. Accessibility — a skeleton is not just a picture
+
+- Wrap each skeleton block in role="status" + aria-label="Loading <what>"
+- Put aria-busy={isLoading} on a box whose numbers are being re-checked
+- Every <Skeleton /> is aria-hidden already — do not announce each bar
+- Respect prefers-reduced-motion
+
+## I8. Never fake slowness to "show" the skeleton
+
+- No artificial setTimeout, no disabling prefetch, no removing ISR caching
+- A fast page that skips the skeleton is CORRECT behaviour, not a bug
+- To test one: DevTools → Network → Slow 4G, or clear .next/cache and cold-load
+
+# ─────────────────────────────────────────────
+# SECTION E: WHAT NOT TO BUILD IN NEXT.JS
+# ─────────────────────────────────────────────
+
+## E1. Do NOT rebuild these — they run server-side and stay in WordPress
+- Wholesale role price calculation (WooCommerce Wholesale Prices)
+- Subscription pricing/billing (WooCommerce Subscriptions)
+- Multi-currency conversion (CURCY)
+- Discount/coupon rule calculation (Discount Rules for WooCommerce, Advanced Coupons)
+- Min/max quantity validation (WooCommerce Min and Max Quantities)
+- Stock/back-in-stock logic (Back In Stock Notifier)
+- SEO meta calculation (Rank Math) — Next.js only reads and renders it
+- Order creation / payment processing (stays on WordPress checkout for now — A2)
+
+## E2. Deferred to a later phase (do not build in Phase 1)
+- Checkout page / payment flow
+- Account / login / wholesale registration
+- Customer reviews widget (Customer Reviews Collector / Trustindex)
+- Popups (Popup Maker, Boxzilla, Adoric)
+- Live chat widget (Tidio)
+- Contact form
+- Appointment booking (Simply Schedule Appointments)
+- SEO polish (redirects, sitemap, full schema markup)
+
+# ─────────────────────────────────────────────
+# SECTION F: BUILD PHASES
+# ─────────────────────────────────────────────
+
+# STATUS KEY:  ⬜ TODO | 🔄 IN PROGRESS | ✅ DONE | ⏸ BLOCKED
+
+# ═══════════════════════════════════════════════
+# PHASE 1 — Core Store Pages (THIS is what gets submitted now)
+# Pages: Header, Footer, Homepage, Shop/Category, Product page, Cart
+# Nothing beyond this list is in scope for Phase 1.
+# ═══════════════════════════════════════════════
+
+## F1. Phase 1 — Task List
+
+  ⬜  P1-01  Project scaffold (Next.js 14, TypeScript, Tailwind, Zustand)
+  ⬜  P1-02  next.config.ts  (WP image domains, env vars)
+  ⬜  P1-03  Root layout — src/app/layout.tsx (Header + Footer wired)
+  ⬜  P1-04  Header component (nav from WP Menu, cart icon with live count)
+  ⬜  P1-05  Footer component (links/content from WP)
+  ⬜  P1-06  WooCommerce REST client — src/lib/woocommerce.ts
+  ⬜  P1-07  WooCommerce Store API client — src/lib/storeApi.ts
+  ⬜  P1-08  Product types — src/types/product.ts
+  ⬜  P1-09  Homepage — src/app/page.tsx + featured/bestseller sections
+  ⬜  P1-10  Shop/Category page — src/app/shop/page.tsx + src/app/shop/[category]/page.tsx
+             + ProductGrid + ProductCard + CategoryFilter
+  ⬜  P1-11  Product detail page — src/app/product/[slug]/page.tsx
+             (images, price, variations if variable/subscription product, description)
+  ⬜  P1-12  Zustand cart store — src/store/cart.ts (mirrors Store API cart)
+  ⬜  P1-13  Cart page — src/app/cart/page.tsx (line items, qty update, remove, totals)
+  ⬜  P1-14  loading.tsx + Skeletons for every route above (Section I)
+  ⬜  P1-15  End-to-end smoke test: browse shop → open product → add to cart →
+             view cart with correct totals (no checkout submission — see 0.1)
+
+## F2. Phase 1 — Plugins/data relevant to each page
+
+  HEADER / FOOTER (src/app/layout.tsx)
+  ─────────────────────────────────────
+  - WP REST menus          → nav links
+  - WooCommerce Store API  → live cart item count badge
+
+  HOMEPAGE (src/app/page.tsx)
+  ─────────────────────────────
+  - WooCommerce REST API   → featured/bestseller product list
+  - WP REST API            → any homepage content from a WP page (if used)
+
+  SHOP / CATEGORY PAGE (src/app/shop/page.tsx, src/app/shop/[category]/page.tsx)
+  ────────────────────────────────────────────────────────────────────────────
+  - WooCommerce REST API   → product list, categories, pagination
+  - CURCY (multi-currency) → price already converted server-side, just render it
+  - WooCommerce Wholesale Prices → ignore in Phase 1 (guest pricing only, see A4)
+
+  PRODUCT DETAIL PAGE (src/app/product/[slug]/page.tsx)
+  ───────────────────────────────────────────────────────
+  - WooCommerce REST API         → product data, variations, images, description
+  - WooCommerce Subscriptions    → render "subscribe to save X%" option if product
+                                    type is a subscription (data comes pre-calculated)
+  - WooCommerce Min/Max Quantities → respect min/max values returned by the API in
+                                    the quantity input, don't invent limits
+  - Advanced Product Labels (BeRocket) → render label/badge data if present on product
+  - Product Video Gallery         → render video if product meta includes one
+
+  CART PAGE (src/app/cart/page.tsx)
+  ─────────────────────────────────
+  - WooCommerce Store API  → cart lines, quantities, totals (source of truth)
+  - Zustand store          → local mirror for instant UI updates only
+
+## F3. Phase 1 — NOT included (see Section E2 for the full deferred list)
+
+  Checkout, account/auth, reviews widget, popups, chat, contact form,
+  appointment booking, SEO polish. These start only after Phase 1 is approved.
+
+## F4. Phase 1 — Confirm before starting (blockers to resolve first)
+
+  □  WC REST API keys generated (Consumer Key + Secret, read-only scope)
+  □  Confirm WooCommerce Store API is reachable (wp-json/wc/store/v1/cart returns 200)
+  □  Confirm which WP Menu location maps to the header nav (avia / avia2 / avia_alternate)
+  □  Design tokens measured from the live site (Section G0) before first component is styled
+  □  Decide hosting target for Next.js (affects env var setup in H2)
+
+# ═══════════════════════════════════════════════
+# PHASE 2+ — Not in scope right now
+# Checkout, auth/wholesale login, reviews, popups, chat, contact form, SEO
+# polish, appointment booking. Do not start any of this until Phase 1 is
+# reviewed and approved.
+# ═══════════════════════════════════════════════
