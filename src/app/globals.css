@@ -1,26 +1,37 @@
 @import "tailwindcss";
 
+/* Colors measured from the live site (arkequine.getkgkrunch.com) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-primary: #0fa7ac;
+  --color-primary-alt: #0d858a;
+  --color-ink: #444444;
+  --color-ink-body: #57585a;
+  --color-ink-dark: #2e2f92;
+  --color-muted: #919191;
+  --color-white: #ffffff;
+  --color-bg-alt: #fcfcfc;
+  --color-bg-qty: #eeeeee;
+  --color-border: #e1e1e1;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-primary: var(--color-primary);
+  --color-primary-alt: var(--color-primary-alt);
+  --color-ink: var(--color-ink);
+  --color-ink-body: var(--color-ink-body);
+  --color-ink-dark: var(--color-ink-dark);
+  --color-muted: var(--color-muted);
+  --color-bg-alt: var(--color-bg-alt);
+  --color-bg-qty: var(--color-bg-qty);
+  --color-border: var(--color-border);
+  --font-sans: var(--font-lato), Helvetica, Arial, sans-serif;
+  --font-heading: Helvetica, Arial, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.65;
 }
