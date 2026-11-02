@@ -1,5 +1,5 @@
 // src/lib/graphql.ts
-const WP_GRAPHQL_URL = `${process.env.NEXT_PUBLIC_WP_URL}/graphql`;
+const WP_GRAPHQL_URL = `${process.env.NEXT_PUBLIC_WP_GRAPHQL_URL}`;
 
 export async function gql<T>(
   query: string,
