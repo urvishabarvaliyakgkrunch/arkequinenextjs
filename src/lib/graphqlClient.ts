@@ -11,6 +11,7 @@ export async function fetchGraphQL<TResponse>(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),
+    next: { revalidate: 3600 },
   });
 
   if (!res.ok) throw new Error(`GraphQL request failed: ${res.status}`);

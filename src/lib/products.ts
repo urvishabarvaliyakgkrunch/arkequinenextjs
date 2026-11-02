@@ -1,5 +1,4 @@
 // src/lib/products.ts
-import { cacheLife } from "next/cache";
 import { fetchGraphQL } from "@/lib/graphqlClient";
 import { mapProduct } from "@/lib/productMapper";
 import { PRODUCT_PAGE_QUERY } from "@/lib/productQuery";
@@ -9,10 +8,7 @@ import type { GqlProductResponse, ProductPageData } from "@/types/product";
 export async function getProductPage(
   slug: string,
 ): Promise<ProductPageData | null> {
-  "use cache";
-  // Product pages refresh about once an hour (rule D1)
-  cacheLife("hours");
-
+  // Product pages refresh about once an hour (rule D1), see revalidate in fetchGraphQL
   const response = await fetchGraphQL<GqlProductResponse>(PRODUCT_PAGE_QUERY, {
     slug,
   });
