@@ -1,21 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Lato } from "next/font/google";
+import { Lato } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 const lato = Lato({
   variable: "--font-lato",
   subsets: ["latin"],
   weight: ["400", "700"],
+});
+
+// Same file the live site serves at wp-content/uploads/avia_fonts/type_fonts/millar-bold-1/millar bold.ttf
+const millar = localFont({
+  src: "../fonts/millar-bold.ttf",
+  variable: "--font-millar",
+  weight: "400",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -27,7 +26,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${lato.variable} h-full antialiased`}
+      className={`${lato.variable} ${millar.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

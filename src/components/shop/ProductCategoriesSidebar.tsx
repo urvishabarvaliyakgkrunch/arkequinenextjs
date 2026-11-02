@@ -12,7 +12,7 @@ export default function ProductCategoriesSidebar({
 }) {
   return (
     <aside className="w-full lg:w-[325px] lg:shrink-0">
-      <h2 className="mb-2 font-[Arial,Helvetica,sans-serif] text-[20px] uppercase tracking-[1px] text-ark-title">
+      <h2 className="mb-2 font-[family-name:var(--f-head)] text-[20px] font-normal uppercase tracking-[1px] text-ark-title">
         Product Categories
       </h2>
       <ul className="list-none p-0">
@@ -25,8 +25,14 @@ export default function ProductCategoriesSidebar({
               } text-[#919191] hover:underline`}
             >
               {category.name}
-            </Link>{" "}
-            <span className="text-[10px] text-[#919191]">({category.count ?? 0})</span>
+            </Link>
+            {/* Backend count resolver is flaky (intermittently returns null) — only show it when it's a real number */}
+            {typeof category.count === "number" ? (
+              <>
+                {" "}
+                <span className="text-[10px] text-[#919191]">({category.count})</span>
+              </>
+            ) : null}
           </li>
         ))}
       </ul>

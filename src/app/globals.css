@@ -8,8 +8,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-lato);
   --font-lato: var(--font-lato);
 
   /* Shop/product design tokens — measured live from arkequine.getkgkrunch.com/shop/ */
@@ -18,6 +17,10 @@
   --color-ark-price-strike: #919191;
   --color-ark-border: #e1e1e1;
   --color-ark-btn-text: #57585a;
+
+  /* Font stacks — matches ark-equine.com computed styles exactly (body + h1 fallback order) */
+  --f-body: var(--font-lato), Helvetica, Arial, sans-serif;
+  --f-head: var(--font-millar), Helvetica, Arial, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,5 +33,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-lato), Arial, Helvetica, sans-serif;
+  font-family: var(--f-body);
 }

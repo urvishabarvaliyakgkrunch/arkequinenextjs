@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Internal working docs (clauderules §0.3) — never committed
+PROJECT-CONTEXT.md

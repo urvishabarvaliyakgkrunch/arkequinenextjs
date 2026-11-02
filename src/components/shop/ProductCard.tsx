@@ -10,7 +10,7 @@ export default function ProductCard({ product }: { product: ProductCardFields })
   const description = stripHtml(product.shortDescription);
 
   return (
-    <article className="flex h-full flex-col border border-ark-border bg-white">
+    <article className="group flex h-full flex-col border border-ark-border bg-white">
       <Link href={`/product/${product.slug}`} className="flex flex-1 flex-col">
         <div className="relative aspect-square w-full bg-[#F5F5F5]">
           {product.image ? (
@@ -25,8 +25,7 @@ export default function ProductCard({ product }: { product: ProductCardFields })
         </div>
 
         <div className="flex flex-1 flex-col gap-2 px-4 pb-4 pt-[5px]">
-          {/* Millar (the brand heading font) 404s on the live site too, so this fallback matches what actually renders there */}
-          <h2 className="font-[Arial,Helvetica,sans-serif] text-[17px] font-normal leading-[22.1px] text-ark-title">
+          <h2 className="font-[family-name:var(--f-head)] text-[17px] font-normal leading-[22.1px] text-ark-title">
             {product.name}
           </h2>
 
@@ -49,7 +48,7 @@ export default function ProductCard({ product }: { product: ProductCardFields })
         </div>
       </Link>
 
-      <div className="flex border-t border-ark-border p-[10px] text-[11px] font-semibold text-ark-btn-text">
+      <div className="flex border-t border-ark-border p-[10px] text-[11px] font-semibold text-ark-btn-text opacity-20 transition-opacity duration-300 group-hover:opacity-100">
         <Link href={`/product/${product.slug}`} className="flex flex-1 items-center justify-center gap-1 text-center">
           <BasketIcon /> Add to Cart
         </Link>
