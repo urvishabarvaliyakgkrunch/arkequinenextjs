@@ -5,7 +5,8 @@ import Container from "@/components/ui/Container";
 import TopBar from "@/components/layout/TopBar";
 import MobileMenu from "@/components/layout/MobileMenu";
 import CartIcon from "@/components/layout/CartIcon";
-import { NAV_LINKS, type NavLink, type SubLink } from "@/components/layout/navLinks";
+import SearchToggle from "@/components/layout/SearchToggle";
+import { type NavLink, type SubLink } from "@/components/layout/navLinks";
 
 const REVEAL =
   "invisible opacity-0 transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100";
@@ -58,9 +59,18 @@ function MegaMenu({ mega }: { mega: NonNullable<NavLink["mega"]> }) {
                 <li key={it.label}>
                   <Link
                     href={it.href}
+                    {...(it.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                     className="relative block py-[3px] pl-[12px] text-[12px] leading-[23px] text-muted transition-colors hover:text-ink-dark before:absolute before:top-1/2 before:left-[2px] before:-mt-[3px] before:border-y-[3px] before:border-l-[4px] before:border-y-transparent before:border-l-muted before:content-['']"
                   >
-                    {it.label}
+                    {it.image ? (
+
+                      <Image src={it.image} alt="" width={300} height={300} unoptimized className="mt-2 h-auto w-[150px]" />
+
+                    ) : (
+
+                      it.label
+
+                    )}
                   </Link>
                 </li>
               ))}
@@ -113,9 +123,9 @@ function NavItem({ link }: { link: NavLink }) {
   );
 }
 
-export default function Header() {
+export default function Header({ navLinks }: { navLinks: NavLink[] }) {
   return (
-    <header className="w-full bg-white">
+    <header className="relative z-[200] w-full bg-white">
       <TopBar />
       <div className="relative border-b border-border [overflow-x:clip]">
         <Container>
@@ -134,21 +144,10 @@ export default function Header() {
             <div className="ml-auto flex items-center">
               <nav className="hidden lg:block" aria-label="Main">
                 <ul className="flex items-center">
-                  {NAV_LINKS.map((link) => (
+                  {navLinks.map((link) => (
                     <NavItem key={link.label} link={link} />
                   ))}
-                  <li>
-                    <button
-                      type="button"
-                      aria-label="Search"
-                      className="flex h-[113px] w-[39px] items-center justify-center text-muted hover:text-ink-dark"
-                    >
-                      <svg viewBox="0 0 20 20" width="17" height="17" fill="none" aria-hidden="true">
-                        <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" />
-                        <path d="M12.5 12.5L18 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-                      </svg>
-                    </button>
-                  </li>
+                  <SearchToggle />
                 </ul>
               </nav>
 
@@ -162,7 +161,7 @@ export default function Header() {
 
               <div className="flex items-center gap-3 lg:ml-0">
                 <CartIcon />
-                <MobileMenu links={NAV_LINKS} />
+                <MobileMenu links={navLinks} />
               </div>
             </div>
           </div>

@@ -16,7 +16,7 @@ function CategoryItem({ category }: { category: Category }) {
           height={121}
           className="block h-[121px] w-[121px] rounded-[3px]"
         />
-        <ImageOverlay className="inset-y-0 -inset-x-[5px]" />
+        {/* <ImageOverlay className="inset-y-0 -inset-x-[5px]" /> */}
       </Link>
       <h5 className="mt-[10px] text-center font-heading text-[11px] leading-[12.1px] font-semibold text-label uppercase">
         {category.label}
@@ -35,15 +35,19 @@ function chunk<T>(items: T[], size: number) {
 export default function CategoryGrid({
   categories = CATEGORIES,
   perRow = 8,
+  maxRows,
 }: {
   categories?: Category[];
   perRow?: number;
+  maxRows?: number;
 }) {
+  // e.g. perRow={6} maxRows={2} shows only the first 12 icons.
+  const shown = maxRows ? categories.slice(0, perRow * maxRows) : categories;
   return (
     <section className="bg-bg-alt">
       {/* Desktop: one padded band per row, icons spaced evenly. */}
       <div className="hidden lg:block">
-        {chunk(categories, perRow).map((row, i) => (
+        {chunk(shown, perRow).map((row, i) => (
           <Container key={i}>
             <div className="flex justify-evenly py-[25px]">
               {row.map((c) => (
@@ -58,7 +62,7 @@ export default function CategoryGrid({
       <div className="lg:hidden">
         <Container>
           <div className="grid grid-cols-2 justify-items-center gap-y-[25px] py-[25px] sm:grid-cols-4">
-            {categories.map((c) => (
+            {shown.map((c) => (
               <CategoryItem key={c.label} category={c} />
             ))}
           </div>

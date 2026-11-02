@@ -7,7 +7,7 @@ import type { NavLink } from "./navLinks";
 function subLabels(link: NavLink) {
   if (link.children) return link.children.map((c) => c.label);
   if (link.mega)
-    return link.mega.columns.flatMap((c) => [c.title, ...c.items.map((i) => i.label)]);
+    return link.mega.columns.flatMap((c) => [c.title, ...c.items.map((i) => i.label).filter(Boolean)]);
   return [];
 }
 

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Lato } from "next/font/google";
 import localFont from "next/font/local";
 import Header from "@/components/layout/Header";
+import { getNavLinks } from "@/lib/menu";
 import Footer from "@/components/layout/Footer";
 import CartToast from "@/components/cart/CartToast";
 import "./globals.css";
@@ -26,11 +27,12 @@ export const metadata: Metadata = {
   description: "Equine Feed | Horse Supplements | Horse Care",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const navLinks = await getNavLinks();
   return (
     <html lang="en" className={`${lato.variable} ${millar.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
-        <Header />
+        <Header navLinks={navLinks} />
         <main className="flex-1">{children}</main>
         <Footer />
         <CartToast />

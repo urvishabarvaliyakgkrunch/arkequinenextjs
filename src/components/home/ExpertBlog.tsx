@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import Container from "@/components/ui/Container";
 import SectionHeading from "@/components/ui/SectionHeading";
-import ImageOverlay from "@/components/ui/ImageOverlay";
 import { BLOG_POSTS } from "./homeData";
 
 export default function ExpertBlog() {
@@ -18,10 +17,9 @@ export default function ExpertBlog() {
                 <Link
                   href={post.href}
                   title={post.title}
-                  className="group relative mb-[6px] block overflow-hidden rounded-[3px] bg-white"
+                  className="mb-[6px] block overflow-hidden rounded-[3px] bg-white"
                 >
                   <Image src={post.img} alt={post.title} width={260} height={185} className="block h-auto w-full" />
-                  <ImageOverlay />
                 </Link>
                 <h3 className="font-heading text-[20px] leading-[28px] font-normal text-secondary uppercase">
                   <Link href={post.href} title={post.title}>
