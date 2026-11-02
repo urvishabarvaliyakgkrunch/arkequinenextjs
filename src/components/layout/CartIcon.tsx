@@ -1,5 +1,17 @@
 // src/components/layout/CartIcon.tsx
-export default function CartIcon({ count = 0 }: { count?: number }) {
+"use client";
+
+import { useEffect } from "react";
+import { useCartStore } from "@/store/cart";
+
+export default function CartIcon() {
+  const count = useCartStore((s) => s.cart?.items_count ?? 0);
+  const hydrate = useCartStore((s) => s.hydrate);
+
+  useEffect(() => {
+    hydrate().catch(() => {});
+  }, [hydrate]);
+
   return (
     <a
       href="#"

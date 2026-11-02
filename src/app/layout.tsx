@@ -4,6 +4,7 @@ import { Lato } from "next/font/google";
 import localFont from "next/font/local";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import CartToast from "@/components/cart/CartToast";
 import "./globals.css";
 
 const lato = Lato({
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
+        <CartToast />
       </body>
     </html>
   );

@@ -3,11 +3,14 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ProductCardFields } from "@/types/product";
 import { stripHtml } from "@/lib/stripHtml";
+import AddToCartButton from "@/components/cart/AddToCartButton";
 
 // Shared by the shop page and every category page — one card design, used everywhere products are listed.
 export default function ProductCard({ product }: { product: ProductCardFields }) {
   const hasSale = Boolean(product.salePrice) && product.salePrice !== product.regularPrice;
   const description = stripHtml(product.shortDescription);
+  // Variable products need a variation chosen first (live site shows "Select options") — only simple products add straight to cart.
+  const canAddDirectly = product.__typename === "SimpleProduct";
 
   return (
     <article className="group flex h-full flex-col border border-ark-border bg-white">
@@ -21,11 +24,15 @@ export default function ProductCard({ product }: { product: ProductCardFields })
               className="object-cover"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />
-          ) : null}
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <PlaceholderIcon />
+            </div>
+          )}
         </div>
 
-        <div className="flex flex-1 flex-col gap-2 px-4 pb-4 pt-[5px]">
-          <h2 className="font-[family-name:var(--f-head)] text-[17px] font-normal leading-[22.1px] text-ark-title">
+        <div className="flex flex-1 flex-col gap-2 px-4 pb-4 pt-[15px]">
+          <h2 className="font-[family-name:var(--f-head)] text-[17px] font-normal leading-[22.1px] text-ark-title uppercase tracking-[1px]">
             {product.name}
           </h2>
 
@@ -33,25 +40,36 @@ export default function ProductCard({ product }: { product: ProductCardFields })
             <p className="text-[17px] leading-[28px] text-black">{description}</p>
           ) : null}
 
-          <div className="mt-auto flex flex-wrap items-baseline gap-x-2 text-[15px] font-semibold">
+          <div className="mt-auto flex flex-wrap items-baseline gap-x-2 text-[15px] font-semibold text-ark-price">
             {hasSale ? (
               <>
                 <span className="text-ark-price-strike line-through">
                   {product.regularPrice}
                 </span>
-                <span className="text-ark-price">{product.salePrice}</span>
+                <span>{product.salePrice}</span>
               </>
             ) : (
-              <span className="text-ark-price">{product.price}</span>
+              <span>{product.price}</span>
             )}
+            {/* Guest-facing default from the live site's subscription plugin (WCSATT) — the real % is computed
+                server-side per visitor and isn't exposed via GraphQL, but guests always see the 10% default. */}
+            <span className="text-[12px]">
+              {" "}— or subscribe to save <span className="text-[15px]">10%</span>
+            </span>
           </div>
         </div>
       </Link>
 
       <div className="flex border-t border-ark-border p-[10px] text-[11px] font-semibold text-ark-btn-text opacity-20 transition-opacity duration-300 group-hover:opacity-100">
-        <Link href={`/product/${product.slug}`} className="flex flex-1 items-center justify-center gap-1 text-center">
-          <BasketIcon /> Add to Cart
-        </Link>
+        {canAddDirectly ? (
+          <AddToCartButton productId={product.databaseId} name={product.name} image={product.image?.sourceUrl}>
+            <BasketIcon /> Add to Cart
+          </AddToCartButton>
+        ) : (
+          <Link href={`/product/${product.slug}`} className="flex flex-1 items-center justify-center gap-1 text-center">
+            <BasketIcon /> Select options
+          </Link>
+        )}
         <Link href={`/product/${product.slug}`} className="flex flex-1 items-center justify-center gap-1 text-center">
           <DocIcon /> Show Details
         </Link>
@@ -62,17 +80,31 @@ export default function ProductCard({ product }: { product: ProductCardFields })
 
 function BasketIcon() {
   return (
-    <svg width="12" height="13" viewBox="0 0 29 32" fill="currentColor" aria-hidden="true">
-      <path d="M7 10l2-6h11l2 6h4v3H3v-3h4zm-2 5h19l-2 14H7L5 15zm6 3v8h2v-8h-2zm5 0v8h2v-8h-2z" />
-    </svg>
+  <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#57585a" viewBox="0 0 29 32" preserveAspectRatio="xMidYMid meet" aria-labelledby="av-svg-title-2" aria-describedby="av-svg-desc-2" role="graphics-symbol" aria-hidden="true">
+<title id="av-svg-title-2">Add to cart</title>
+<desc id="av-svg-desc-2">Add to cart</desc>
+<path d="M4.8 27.2q0-1.28 0.96-2.24t2.24-0.96q1.344 0 2.272 0.96t0.928 2.24q0 1.344-0.928 2.272t-2.272 0.928q-1.28 0-2.24-0.928t-0.96-2.272zM20.8 27.2q0-1.28 0.96-2.24t2.24-0.96q1.344 0 2.272 0.96t0.928 2.24q0 1.344-0.928 2.272t-2.272 0.928q-1.28 0-2.24-0.928t-0.96-2.272zM10.496 19.648q-1.152 0.32-1.088 0.736t1.408 0.416h17.984v2.432q0 0.64-0.64 0.64h-20.928q-0.64 0-0.64-0.64v-2.432l-0.32-1.472-3.136-14.528h-3.136v-2.56q0-0.64 0.64-0.64h4.992q0.64 0 0.64 0.64v2.752h22.528v8.768q0 0.704-0.576 0.832z"></path>
+</svg>
   );
 }
 
 function DocIcon() {
   return (
-    <svg width="12" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d="M6 2h9l5 5v15H6V2z" />
-      <path d="M9 12h6M9 16h6M9 8h3" />
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#57585a" viewBox="0 0 22 32" preserveAspectRatio="xMidYMid meet" aria-labelledby="av-svg-title-5" aria-describedby="av-svg-desc-5" role="graphics-symbol" aria-hidden="true">
+<title id="av-svg-title-5">Show Details</title>
+<desc id="av-svg-desc-5">Show Details</desc>
+<path d="M6.784 17.344v-2.88h8.96v2.88h-8.96zM19.2 1.6q1.344 0 2.272 0.928t0.928 2.272v22.4q0 1.28-0.928 2.24t-2.272 0.96h-16q-1.28 0-2.24-0.96t-0.96-2.24v-22.4q0-1.344 0.96-2.272t2.24-0.928h16zM19.2 27.2v-22.4h-16v22.4h16zM15.68 8.256v2.816h-8.96v-2.816h8.96zM15.68 20.8v2.816h-8.96v-2.816h8.96z"></path>
+</svg>
+  );
+}
+
+// WooCommerce's default "no image" placeholder look — grey mountain glyph
+function PlaceholderIcon() {
+  return (
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" stroke="#bbbbbb" strokeWidth="2" aria-hidden="true">
+      <rect x="4" y="4" width="56" height="56" rx="2" />
+      <circle cx="21" cy="21" r="5" />
+      <path d="M4 44l16-16 12 12 8-8 16 16" strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
 }

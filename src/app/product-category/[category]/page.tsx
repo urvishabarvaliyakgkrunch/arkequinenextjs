@@ -33,7 +33,7 @@ export default async function ProductCategoryPage({
           { label: data.productCategory.name },
         ]}
       />
-      <main className="mx-auto flex max-w-[1210px] flex-col gap-8 px-4 py-8 lg:flex-row">
+      <main className="mx-auto flex max-w-[1210px] flex-col gap-8 px-4 py-[25px] lg:flex-row lg:gap-12">
         <div className="flex-1">
           <ShopToolbar defaultOrderby={orderby ?? ""} defaultPerPage={first} />
           <ProductGrid
