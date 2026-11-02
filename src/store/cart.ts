@@ -6,7 +6,10 @@ import {
   updateItemQuantity as apiUpdateItemQuantity,
   removeItem as apiRemoveItem,
   applyCoupon as apiApplyCoupon,
+  updateShippingAddress as apiUpdateShippingAddress,
+  selectShippingRate as apiSelectShippingRate,
   type StoreApiCart,
+  type StoreApiAddress,
 } from "@/lib/storeApi";
 
 export interface LastAdded {
@@ -25,6 +28,8 @@ interface CartState {
   updateQuantity: (key: string, quantity: number) => Promise<void>;
   removeItem: (key: string) => Promise<void>;
   applyCoupon: (code: string) => Promise<void>;
+  updateShippingAddress: (address: Partial<StoreApiAddress>) => Promise<void>;
+  selectShippingRate: (rateId: string, packageId?: number) => Promise<void>;
   dismissToast: () => void;
 }
 
@@ -80,6 +85,16 @@ export const useCartStore = create<CartState>((set) => ({
 
   applyCoupon: async (code) => {
     const cart = await apiApplyCoupon(code);
+    set({ cart });
+  },
+
+  updateShippingAddress: async (address) => {
+    const cart = await apiUpdateShippingAddress(address);
+    set({ cart });
+  },
+
+  selectShippingRate: async (rateId, packageId = 0) => {
+    const cart = await apiSelectShippingRate(rateId, packageId);
     set({ cart });
   },
 

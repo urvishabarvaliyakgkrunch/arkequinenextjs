@@ -1,5 +1,6 @@
 // src/components/cart/CartTotals.tsx
 import { formatMoney, type StoreApiCart } from "@/lib/storeApi";
+import ShippingCalculator from "@/components/cart/ShippingCalculator";
 
 // Matches ark-equine.com/basket/'s .cart_totals box — 14px uppercase Millar heading, teal buttons,
 // measured live via computed styles.
@@ -16,15 +17,15 @@ export default function CartTotals({ cart }: { cart: StoreApiCart }) {
               Subtotal
             </th>
             <td className="border-b border-ark-border p-[9px_12px] text-right">
-              {formatMoney(cart.totals.total_price, cart.totals)}
+              {formatMoney(cart.totals.total_items, cart.totals)}
             </td>
           </tr>
           <tr>
             <th className="border-b border-ark-border p-[9px_12px] text-left align-top font-normal text-ark-btn-text">
               Shipment
             </th>
-            <td className="border-b border-ark-border p-[9px_12px] text-right text-[12px] text-ark-btn-text">
-              Enter your address to view shipping options.
+            <td className="border-b border-ark-border p-[9px_12px] text-right">
+              <ShippingCalculator cart={cart} />
             </td>
           </tr>
           {cart.coupons.map((coupon) => (

@@ -21,11 +21,42 @@ export interface StoreApiCartItem {
   totals: StoreApiMoney & { line_subtotal: string };
 }
 
+export interface StoreApiShippingRate {
+  rate_id: string;
+  name: string;
+  price: string;
+  selected: boolean;
+  currency_minor_unit: number;
+  currency_symbol: string;
+  meta_data: { key: string; value: string }[];
+}
+
+export interface StoreApiShippingPackage {
+  package_id: number;
+  name: string;
+  shipping_rates: StoreApiShippingRate[];
+}
+
+export interface StoreApiAddress {
+  city: string;
+  state: string;
+  postcode: string;
+  country: string;
+}
+
 export interface StoreApiCart {
   items: StoreApiCartItem[];
   items_count: number;
   coupons: { code: string; totals: { total_discount: string } }[];
-  totals: StoreApiMoney & { total_price: string; total_discount: string };
+  totals: StoreApiMoney & {
+    total_items: string;
+    total_price: string;
+    total_discount: string;
+    total_shipping: string | null;
+  };
+  needs_shipping: boolean;
+  shipping_address: StoreApiAddress;
+  shipping_rates: StoreApiShippingPackage[];
 }
 
 // Store API amounts are integer minor units (e.g. "1444" = €14.44) — divide by 10^currency_minor_unit.
@@ -95,4 +126,17 @@ export async function removeItem(key: string): Promise<StoreApiCart> {
 export async function applyCoupon(code: string): Promise<StoreApiCart> {
   await ensureNonce();
   return storeFetch("/apply-coupon", { method: "POST", body: JSON.stringify({ code }) });
+}
+
+export async function updateShippingAddress(address: Partial<StoreApiAddress>): Promise<StoreApiCart> {
+  await ensureNonce();
+  return storeFetch("/update-customer", { method: "POST", body: JSON.stringify({ shipping_address: address }) });
+}
+
+export async function selectShippingRate(rateId: string, packageId = 0): Promise<StoreApiCart> {
+  await ensureNonce();
+  return storeFetch("/select-shipping-rate", {
+    method: "POST",
+    body: JSON.stringify({ package_id: packageId, rate_id: rateId }),
+  });
 }
