@@ -20,7 +20,7 @@ export default function ProductCategoriesSidebar({
           <li key={category.slug} className="py-[1px]">
             <Link
               href={`/product-category/${category.slug}`}
-              className={`text-[12px] ${
+              className={`text-[12px] leading-[28px] ${
                 category.slug === activeSlug ? "font-bold" : ""
               } text-[#919191] hover:underline`}
             >
@@ -30,7 +30,7 @@ export default function ProductCategoriesSidebar({
             {typeof category.count === "number" ? (
               <>
                 {" "}
-                <span className="text-[10px] text-[#919191]">({category.count})</span>
+                <span className="text-[10px] text-[#919191] italic">({category.count})</span>
               </>
             ) : null}
           </li>

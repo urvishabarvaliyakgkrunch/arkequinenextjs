@@ -161,7 +161,7 @@ export default function Header() {
               />
 
               <div className="flex items-center gap-3 lg:ml-0">
-                <CartIcon count={1} />
+                <CartIcon />
                 <MobileMenu links={NAV_LINKS} />
               </div>
             </div>

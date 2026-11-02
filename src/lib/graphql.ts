@@ -1,5 +1,5 @@
 // src/lib/graphql.ts
-const WP_GRAPHQL_URL = `${process.env.NEXT_PUBLIC_WP_URL}/graphql`;
+  const WP_GRAPHQL_URL = `${process.env.NEXT_PUBLIC_WP_GRAPHQL_URL}`;
 
 // Tag every catalog query so one revalidate call can clear them all
 export const PRODUCTS_TAG = "products";
