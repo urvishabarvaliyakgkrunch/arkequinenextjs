@@ -1,4 +1,4 @@
-// src/app/cart/loading.tsx
+// src/app/basket/loading.tsx
 import Skeleton from "@/components/ui/Skeleton";
 
 export default function Loading() {
