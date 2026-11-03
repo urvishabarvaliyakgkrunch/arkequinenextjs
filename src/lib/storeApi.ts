@@ -9,6 +9,18 @@ export interface StoreApiMoney {
   currency_symbol: string;
 }
 
+// One "label: value" line the Store API attaches to a cart item — a chosen variation option
+// (e.g. "Size: 10kg") uses `attribute`/`value`; other plugin-added details (e.g. "Unit pricing
+// measure") use `display_key`/`display_value` instead.
+export interface StoreApiCartItemVariation {
+  attribute: string;
+  value: string;
+}
+export interface StoreApiCartItemData {
+  display_key: string;
+  display_value: string;
+}
+
 export interface StoreApiCartItem {
   key: string;
   id: number;
@@ -17,6 +29,10 @@ export interface StoreApiCartItem {
   name: string;
   permalink: string;
   images: { thumbnail: string; alt: string }[];
+  // Which variation options were picked (e.g. Size) — empty for a simple product
+  variation: StoreApiCartItemVariation[];
+  // Extra per-item details some plugins attach (e.g. "Unit pricing measure")
+  item_data: StoreApiCartItemData[];
   prices: StoreApiMoney & { price: string };
   totals: StoreApiMoney & { line_subtotal: string };
 }

@@ -92,6 +92,28 @@ export function mapProduct(
     ...(product.galleryImages?.nodes ?? []),
   ];
 
+  // Keep only the attributes WooCommerce marked "used for variations" (e.g. "Size") — a VariableProduct
+  // can also carry purely descriptive attributes that aren't meant to show up as a picker
+  const attributes = (product.attributes?.nodes ?? [])
+    .filter((attribute) => attribute.variation)
+    .map((attribute) => ({
+      name: attribute.name,
+      label: attribute.label ?? attribute.name,
+      options: attribute.options ?? [],
+    }));
+
+  const variations = (product.variations?.nodes ?? []).map((variation) => ({
+    databaseId: variation.databaseId,
+    price: variation.price ?? "",
+    regularPrice: variation.regularPrice ?? "",
+    isInStock: variation.stockStatus !== "OUT_OF_STOCK",
+    image: variation.image ?? null,
+    // e.g. { size: "Aquatabs Inline Cartridge" } — used later to match the shopper's dropdown picks
+    attributes: Object.fromEntries(
+      (variation.attributes?.nodes ?? []).map((attribute) => [attribute.name, attribute.value ?? ""]),
+    ),
+  }));
+
   const categories = product.productCategories?.nodes ?? [];
   // Rank Math saves the primary category id; fall back to the last category
   const primaryId = Number(readMeta(product, "rank_math_primary_product_cat"));
@@ -133,5 +155,7 @@ export function mapProduct(
     })),
     // A tag can come back null when WordPress hides it
     educationTags: tags.filter((tag): tag is EducationTag => tag !== null),
+    attributes,
+    variations,
   };
 }

@@ -7,7 +7,7 @@ import PageHeaderBar from "@/components/shop/PageHeaderBar";
 import CartTable from "@/components/cart/CartTable";
 import CartCouponRow from "@/components/cart/CartCouponRow";
 import CartTotals from "@/components/cart/CartTotals";
-import Skeleton from "@/components/ui/Skeleton";
+import CartPageSkeleton from "@/components/cart/CartPageSkeleton";
 import { useCartStore } from "@/store/cart";
 
 // Store API cart has no server data to fetch ahead of time — it's whatever the visitor's own
@@ -15,7 +15,10 @@ import { useCartStore } from "@/store/cart";
 export default function CartPage() {
   const cart = useCartStore((s) => s.cart);
   const hydrate = useCartStore((s) => s.hydrate);
-  const [hasMounted, setHasMounted] = useState(false);
+  // The header's basket icon hydrates the same store on every page, so by the time someone clicks
+  // through to /basket the cart is usually already loaded — show it right away instead of flashing
+  // a skeleton over data we already have. Only a genuinely first load (cart still null) waits.
+  const [hasMounted, setHasMounted] = useState(cart !== null);
 
   useEffect(() => {
     hydrate()
@@ -30,7 +33,7 @@ export default function CartPage() {
       <PageHeaderBar title="Basket" breadcrumbs={[{ label: "Home", href: "/" }, { label: "Basket" }]} />
       <main className="mx-auto max-w-[1210px] px-4 py-[25px]">
         {!hasMounted ? (
-          <Skeleton className="h-[300px] w-full" />
+          <CartPageSkeleton />
         ) : isEmpty ? (
           <p className="text-[14px] text-ark-btn-text">
             Your basket is currently empty.{" "}

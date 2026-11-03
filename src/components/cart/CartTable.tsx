@@ -68,6 +68,17 @@ function CartRow({ item }: { item: StoreApiCartItem }) {
           ) : null}
           <span className="text-ark-price">{item.name}</span>
         </Link>
+        {/* Shows which option was picked, e.g. "size: 10kg", under the product name — same as the live cart */}
+        {item.variation.map((row) => (
+          <p key={row.attribute} className="m-0 text-[12px] text-ark-btn-text">
+            {row.attribute}: {row.value}
+          </p>
+        ))}
+        {item.item_data.map((row) => (
+          <p key={row.display_key} className="m-0 text-[12px] text-ark-btn-text">
+            {row.display_key}: {row.display_value}
+          </p>
+        ))}
       </td>
       <td className="border-b border-ark-border p-[6px_5px] align-middle">
         <SubscriptionPriceOptions item={item} />
