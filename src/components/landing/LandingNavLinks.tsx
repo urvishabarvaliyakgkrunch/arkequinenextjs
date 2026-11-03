@@ -8,13 +8,14 @@ interface Props {
   menu: LandingLink[];
   openSub: string | null;
   onToggle: (label: string) => void;
+  onHover: (label: string | null) => void;
   onNavigate: () => void;
 }
 
 function SubList({ item, open, onNavigate }: { item: LandingLink; open: boolean; onNavigate: () => void }) {
   return (
     <ul
-      className={`${open ? "block" : "hidden"} list-none p-0 min-[901px]:absolute min-[901px]:top-[calc(var(--menu-top,102px)-33px)] min-[901px]:left-0 min-[901px]:z-[2] min-[901px]:-mt-px min-[901px]:w-[208px] min-[901px]:border-t-2 min-[901px]:border-t-ink-dark min-[901px]:bg-white min-[901px]:text-[#717a7a] min-[901px]:shadow-[0_8px_15px_rgba(0,0,0,0.1)] min-[901px]:group-hover/item:block`}
+      className={`${open ? "block" : "hidden"} list-none p-0 min-[901px]:absolute min-[901px]:top-[calc(var(--menu-top,102px)-33px)] min-[901px]:left-0 min-[901px]:z-[2] min-[901px]:-mt-px min-[901px]:w-[208px] min-[901px]:border-t-2 min-[901px]:border-t-ink-dark min-[901px]:bg-white min-[901px]:text-[#717a7a] min-[901px]:shadow-[0_8px_15px_rgba(0,0,0,0.1)]`}
     >
       {item.children?.map((c) => (
         <li key={c.label} className="list-none max-[900px]:border-b-0">
@@ -31,7 +32,7 @@ function SubList({ item, open, onNavigate }: { item: LandingLink; open: boolean;
   );
 }
 
-export default function LandingNavLinks({ menu, openSub, onToggle, onNavigate }: Props) {
+export default function LandingNavLinks({ menu, openSub, onToggle, onHover, onNavigate }: Props) {
   return (
     <nav>
       <ul className="mb-[10px] flex list-none gap-[34px] max-[1100px]:gap-[22px] max-[900px]:mb-0 max-[900px]:flex-col max-[900px]:gap-0">
@@ -40,6 +41,8 @@ export default function LandingNavLinks({ menu, openSub, onToggle, onNavigate }:
           return (
             <li
               key={item.label}
+              onMouseEnter={() => item.children && onHover(item.label)}
+              onMouseLeave={() => item.children && onHover(null)}
               className={`group/item ${item.children ? "relative min-[901px]:after:absolute min-[901px]:after:top-[30px] min-[901px]:after:left-0 min-[901px]:after:h-[50px] min-[901px]:after:w-full min-[901px]:after:content-['']" : ""} max-[900px]:border-b max-[900px]:border-grey max-[900px]:last:border-b-0`}
             >
               <div className="flex items-center max-[900px]:flex-wrap max-[900px]:justify-between">

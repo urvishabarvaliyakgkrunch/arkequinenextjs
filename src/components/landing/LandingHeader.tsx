@@ -60,7 +60,10 @@ export default function LandingHeader() {
   }, [open]);
 
   const closeSearch = useCallback(() => setSearchOpen(false), []);
-  const closeMenu = useCallback(() => setOpen(false), []);
+  const closeMenu = useCallback(() => {
+    setOpen(false);
+    setOpenSub(null);
+  }, []);
   const toggleSub = (label: string) => setOpenSub((cur) => (cur === label ? null : label));
 
   return (
@@ -75,7 +78,7 @@ export default function LandingHeader() {
             id="navMenu"
             className={`min-[901px]:contents max-[900px]:absolute max-[900px]:top-full max-[900px]:right-0 max-[900px]:left-0 max-[900px]:z-[99] max-[900px]:max-h-[450px] max-[900px]:overflow-y-auto max-[900px]:border-t max-[900px]:border-grey max-[900px]:bg-white max-[900px]:px-8 max-[900px]:pt-5 max-[900px]:pb-7 max-[900px]:shadow-[0_12px_28px_-14px_rgba(0,0,0,0.22)] ${open ? "max-[900px]:block" : "max-[900px]:hidden"}`}
           >
-            <LandingNavLinks menu={LANDING_MENU} openSub={openSub} onToggle={toggleSub} onNavigate={closeMenu} />
+            <LandingNavLinks menu={LANDING_MENU} openSub={openSub} onToggle={toggleSub} onHover={setOpenSub} onNavigate={closeMenu} />
             <TrustIndex trust={SITE.trust} className="flex flex-col items-center justify-center text-center min-[901px]:hidden" />
             {(
               <Link href={SITE.cta.href} onClick={closeMenu} className="inline-flex items-center gap-2 rounded-[3px] bg-teal px-[15px] py-[11px] text-[12px] font-bold tracking-[0.08em] text-white uppercase transition-[background,transform] duration-[250ms] hover:-translate-y-px hover:bg-teal-deep max-[900px]:mt-5 max-[900px]:flex max-[900px]:w-full max-[900px]:justify-center">
