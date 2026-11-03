@@ -26,6 +26,20 @@ export const PRODUCT_PAGE_QUERY = `
       metaData(keysIn: ["yikes_woo_products_tabs", "rank_math_primary_product_cat"]) { key value }
       ... on ProductWithPricing { price regularPrice }
       ... on InventoriedProduct { stockStatus }
+      # Only a VariableProduct (like "Aquatabs InLine") has attributes/variations to pick from
+      ... on VariableProduct {
+        attributes { nodes { name label options variation } }
+        variations(first: 50) {
+          nodes {
+            databaseId
+            price
+            regularPrice
+            stockStatus
+            image { ${IMAGE_FIELDS} }
+            attributes { nodes { name value } }
+          }
+        }
+      }
       related(first: 4) {
         nodes {
           __typename
@@ -43,6 +57,26 @@ export const PRODUCT_PAGE_QUERY = `
     # "Education Articles" box = blog tags, fetched in the same call
     tags(first: 45, where: { hideEmpty: true, orderby: NAME, order: ASC }) {
       nodes { databaseId name slug count }
+    }
+  }
+`;
+
+// Landing page "Best Sellers" — WC "featured" flag is the closest thing to a curated homepage pick on this backend
+export const BEST_SELLERS_QUERY = `
+  query BestSellers {
+    products(first: 5, where: { featured: true }) {
+      nodes {
+        __typename
+        id
+        databaseId
+        slug
+        name
+        shortDescription
+        image { sourceUrl altText }
+        productCategories(first: 1) { nodes { name } }
+        ... on ProductWithPricing { price regularPrice salePrice }
+        ... on InventoriedProduct { stockStatus }
+      }
     }
   }
 `;

@@ -1,8 +1,8 @@
 // src/lib/products.ts
 import { gql } from "@/lib/graphql";
 import { mapProduct } from "@/lib/productMapper";
-import { PRODUCT_PAGE_QUERY } from "@/lib/productQuery";
-import type { GqlProductResponse, ProductPageData } from "@/types/product";
+import { BEST_SELLERS_QUERY, PRODUCT_PAGE_QUERY } from "@/lib/productQuery";
+import type { BestSellerProduct, GqlProductResponse, ProductPageData } from "@/types/product";
 
 // Product pages refresh about once an hour (rule D1)
 const PRODUCT_PAGE_SECONDS = 3600;
@@ -44,4 +44,25 @@ export async function getProductPage(
   if (!data?.product) return null;
 
   return mapProduct(data.product, data.tags?.nodes ?? []);
+}
+
+interface RawBestSeller extends Omit<BestSellerProduct, "category"> {
+  productCategories?: { nodes: { name: string }[] };
+}
+
+// Landing page Best Sellers; empty array (not a thrown error) when the backend has no featured products yet
+export async function getBestSellers(): Promise<BestSellerProduct[]> {
+  try {
+    const data = await gql<{ products: { nodes: RawBestSeller[] } }>(
+      BEST_SELLERS_QUERY,
+      {},
+      { revalidate: PRODUCT_PAGE_SECONDS },
+    );
+    return data.products.nodes.map((p) => ({
+      ...p,
+      category: p.productCategories?.nodes[0]?.name ?? null,
+    }));
+  } catch {
+    return [];
+  }
 }

@@ -1,5 +1,6 @@
 // src/app/basket/loading.tsx
 import Skeleton from "@/components/ui/Skeleton";
+import CartPageSkeleton from "@/components/cart/CartPageSkeleton";
 
 export default function Loading() {
   return (
@@ -8,8 +9,8 @@ export default function Loading() {
         <Skeleton className="h-4 w-16" />
       </div>
       <main className="mx-auto max-w-[1210px] px-4 py-[25px]">
-        {/* Same single-column shell as cart/page.tsx while the cart loads */}
-        <Skeleton className="h-[300px] w-full" />
+        {/* Same table/totals shape as page.tsx's own skeleton while the cart loads */}
+        <CartPageSkeleton />
       </main>
     </>
   );
