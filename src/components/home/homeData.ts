@@ -1,6 +1,6 @@
 // src/components/home/homeData.ts
 // Static homepage content mirrored from ark-equine.com — swap to WP data later.
-import type { Product } from "@/components/product/ProductCard";
+import type { ProductCardFields } from "@/types/product";
 
 const UPLOADS = "https://ark-equine.com/wp-content/uploads";
 
@@ -22,40 +22,38 @@ export const FEATURES = [
   { href: "/delivery-policy/", img: `${UPLOADS}/2023/10/CTA-NEXTDAY.webp`, width: 524, height: 94, alt: "Same day dispatch" },
 ];
 
-export const BEST_SELLERS: Product[] = [
-  {
-    title: "Elevate",
-    href: "/product/elevate/",
-    img: `${UPLOADS}/2025/08/packshot-e1756393824802-300x300.png`,
-    description:
-      "A COMPLEMENTARY LIQUID FEED PROVIDING 30 VITAMINS, MINERAL, AMINO ACIDS AND TRACE ELEMENTS TO ENSURE […]",
-    price: "€69.50",
-    variable: true,
-  },
-  {
-    title: "Essential Grooming Kit",
-    href: "/product/essential-grooming-kit/",
-    img: `${UPLOADS}/2024/10/DERBY_GroomingBundle-300x300.jpg`,
-    description: "High-quality, grooming kit essentials",
-    price: "€39.99",
-    addToCartHref: "/?add-to-cart=7194",
-  },
-  {
-    title: "Viusid Equine",
-    href: "/product/viusid-equine/",
-    img: `${UPLOADS}/2025/06/Packshot-300x300.jpg`,
-    description: "A complementary feed rich in antioxidants to support horses during periods of stress.",
-    price: "€45.00 – €205.00",
-    variable: true,
-  },
-  {
-    title: "Respimin 800G",
-    href: "/product/respimin/",
-    img: `${UPLOADS}/2021/08/RespiminARKequine_low-300x300.jpg`,
-    description: "Effective equine respiratory support",
-    price: "€60.00",
-    addToCartHref: "/?add-to-cart=200",
-  },
+// Shaped like the shop's ProductCardFields so the homepage reuses the shop ProductCard.
+const bestSeller = (
+  databaseId: number,
+  slug: string,
+  name: string,
+  img: string,
+  shortDescription: string,
+  price: string,
+  type: ProductCardFields["__typename"] = "SimpleProduct",
+): ProductCardFields => ({
+  __typename: type,
+  id: `best-seller-${databaseId}`,
+  databaseId,
+  slug,
+  name,
+  shortDescription,
+  image: { sourceUrl: img, altText: name },
+  price,
+  regularPrice: price,
+  salePrice: null,
+  stockStatus: "IN_STOCK",
+});
+
+export const BEST_SELLERS: ProductCardFields[] = [
+  bestSeller(1, "elevate", "Elevate", `${UPLOADS}/2025/08/packshot-e1756393824802-300x300.png`,
+    "A COMPLEMENTARY LIQUID FEED PROVIDING 30 VITAMINS, MINERAL, AMINO ACIDS AND TRACE ELEMENTS TO ENSURE […]", "€69.50", "VariableProduct"),
+  bestSeller(7194, "essential-grooming-kit", "Essential Grooming Kit", `${UPLOADS}/2024/10/DERBY_GroomingBundle-300x300.jpg`,
+    "High-quality, grooming kit essentials", "€39.99"),
+  bestSeller(2, "viusid-equine", "Viusid Equine", `${UPLOADS}/2025/06/Packshot-300x300.jpg`,
+    "A complementary feed rich in antioxidants to support horses during periods of stress.", "€45.00 – €205.00", "VariableProduct"),
+  bestSeller(200, "respimin", "Respimin 800G", `${UPLOADS}/2021/08/RespiminARKequine_low-300x300.jpg`,
+    "Effective equine respiratory support", "€60.00"),
 ];
 
 type Point = { x: number; y: number };

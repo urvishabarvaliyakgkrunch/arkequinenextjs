@@ -16,16 +16,8 @@ export default function CartTotals({ cart }: { cart: StoreApiCart }) {
             <th className="border-b border-ark-border p-[9px_12px] text-left font-normal text-ark-btn-text">
               Subtotal
             </th>
-            <td className="border-b border-ark-border p-[9px_12px] text-right">
+            <td className="border-b border-ark-border p-[9px_12px] text-left">
               {formatMoney(cart.totals.total_items, cart.totals)}
-            </td>
-          </tr>
-          <tr>
-            <th className="border-b border-ark-border p-[9px_12px] text-left align-top font-normal text-ark-btn-text">
-              Shipment
-            </th>
-            <td className="border-b border-ark-border p-[9px_12px] text-right">
-              <ShippingCalculator cart={cart} />
             </td>
           </tr>
           {cart.coupons.map((coupon) => (
@@ -33,14 +25,22 @@ export default function CartTotals({ cart }: { cart: StoreApiCart }) {
               <th className="border-b border-ark-border p-[9px_12px] text-left font-normal text-ark-btn-text">
                 Coupon: {coupon.code}
               </th>
-              <td className="border-b border-ark-border p-[9px_12px] text-right text-ark-price">
+              <td className="border-b border-ark-border p-[9px_12px] text-left text-ark-price">
                 -{formatMoney(coupon.totals.total_discount, cart.totals)}
               </td>
             </tr>
           ))}
           <tr>
+            <th className="border-b border-ark-border p-[9px_12px] text-left align-top font-normal text-ark-btn-text">
+              Shipment
+            </th>
+            <td className="border-b border-ark-border p-[9px_12px] text-left">
+              <ShippingCalculator cart={cart} />
+            </td>
+          </tr>
+          <tr>
             <th className="p-[9px_12px] text-left text-[14px] font-semibold text-ark-title">Total</th>
-            <td className="p-[9px_12px] text-right text-[14px] font-semibold text-ark-price">
+            <td className="p-[9px_12px] text-left text-[14px] font-semibold text-ark-price">
               {formatMoney(cart.totals.total_price, cart.totals)}
             </td>
           </tr>

@@ -2,17 +2,29 @@
 "use client";
 
 import { useState } from "react";
-import { useCartStore } from "@/store/cart";
+import { useCartStore, getConfirmedPlan } from "@/store/cart";
 
 // Sits directly under the table, matching ark-equine.com/basket/'s layout: coupon input + Apply coupon
-// on the left, Update basket on the right. "Update basket" has no separate action here — quantity
-// changes already save instantly via the Store API, so it's shown disabled like the live site's
-// does until a field actually changes (its own JS disables it the same way until you touch a qty input).
+// on the left, Update basket on the right. Quantity +/- already saves instantly, so "Update basket"'s
+// one real job is committing a staged subscription-plan radio (CartTable's SubscriptionPriceOptions —
+// picking a radio there only stages the choice, it never touches the cart by itself). Disabled until a
+// staged plan actually differs from the item's confirmed plan — compared by plan, not quantity, since
+// "monthly" and "one-time" are both quantity 1 and would otherwise never register as a real change.
 export default function CartCouponRow() {
   const applyCoupon = useCartStore((s) => s.applyCoupon);
+  const cart = useCartStore((s) => s.cart);
+  const selectedPlans = useCartStore((s) => s.selectedPlans);
+  const confirmedPlans = useCartStore((s) => s.confirmedPlans);
+  const applyingPlans = useCartStore((s) => s.applyingPlans);
+  const applyPlans = useCartStore((s) => s.applyPlans);
   const [code, setCode] = useState("");
   const [applying, setApplying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const hasPendingPlanChange = (cart?.items ?? []).some((item) => {
+    const selected = selectedPlans[item.key];
+    return selected && selected !== getConfirmedPlan(confirmedPlans, item.key, item.quantity);
+  });
 
   async function handleApply() {
     if (!code.trim()) return;
@@ -50,10 +62,11 @@ export default function CartCouponRow() {
       </div>
       <button
         type="button"
-        disabled
-        className="h-[42px] cursor-not-allowed bg-ark-price px-4 text-[12px] font-semibold text-white opacity-50"
+        onClick={() => applyPlans()}
+        disabled={!hasPendingPlanChange || applyingPlans}
+        className="h-[42px] cursor-pointer bg-ark-price px-4 text-[12px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Update basket
+        {applyingPlans ? "Updating…" : "Update basket"}
       </button>
     </div>
   );

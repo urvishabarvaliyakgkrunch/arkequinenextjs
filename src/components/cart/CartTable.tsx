@@ -3,7 +3,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCartStore } from "@/store/cart";
+import { useCartStore, getConfirmedPlan, type SubscriptionPlan } from "@/store/cart";
 import { formatMoney, type StoreApiCart, type StoreApiCartItem } from "@/lib/storeApi";
 
 // Matches ark-equine.com/basket/'s table.shop_table — 13px body text, uppercase bold 12px headers,
@@ -111,11 +111,21 @@ function CartRow({ item }: { item: StoreApiCartItem }) {
   );
 }
 
-// Live site's subscribe-and-save radios (WooCommerce Subscriptions/WCSATT) — that plugin's per-item
-// scheme data isn't exposed by the Store API (checked: extensions/item_data are empty for it), so this
-// is a cosmetic replica only: monthly/3-month shown at the same 10% guest default used on the product
-// cards. Picking a radio does NOT change what's actually charged — there's no real data to wire it to.
+// Live site's subscribe-and-save radios (WooCommerce Subscriptions/WCSATT). That plugin's real
+// per-unit discount data isn't exposed by the Store API (checked: extensions/item_data are empty for
+// it) and wiring it up for real needs a backend change this project isn't making, so the €/month and
+// €/3-months labels stay the same 10%-off guest estimate used on the product cards — not the real
+// charged amount. Picking a radio only stages the choice (useCartStore's selectedPlans); nothing hits
+// the cart until "Update basket" is clicked (see CartCouponRow), which calls the real Store API
+// quantity-update endpoint — so the Subtotal column stays a true, correctly calculated WooCommerce
+// total, just at full per-unit price (quantity × full price) since WCSATT's discount isn't reachable.
 function SubscriptionPriceOptions({ item }: { item: StoreApiCartItem }) {
+  const setPlan = useCartStore((s) => s.setPlan);
+  const confirmedPlans = useCartStore((s) => s.confirmedPlans);
+  const selected: SubscriptionPlan =
+    useCartStore((s) => s.selectedPlans[item.key]) ??
+    getConfirmedPlan(confirmedPlans, item.key, item.quantity);
+
   const oneTime = Number(item.prices.price) / 10 ** item.prices.currency_minor_unit;
   const discounted = (oneTime * 0.9).toFixed(item.prices.currency_minor_unit);
   const oneTimeLabel = formatMoney(item.prices.price, item.prices);
@@ -125,15 +135,33 @@ function SubscriptionPriceOptions({ item }: { item: StoreApiCartItem }) {
     <fieldset className="flex flex-col gap-1">
       <legend className="sr-only">Purchase option for {item.name}</legend>
       <label className="flex items-center gap-2">
-        <input type="radio" name={`plan-${item.key}`} defaultChecked className="accent-ark-price" />
+        <input
+          type="radio"
+          name={`plan-${item.key}`}
+          checked={selected === "one_time"}
+          onChange={() => setPlan(item.key,"one_time")}
+          className="accent-ark-price"
+        />
         {oneTimeLabel}
       </label>
       <label className="flex items-center gap-2 text-ark-btn-text">
-        <input type="radio" name={`plan-${item.key}`} className="accent-ark-price" />
+        <input
+          type="radio"
+          name={`plan-${item.key}`}
+          checked={selected === "monthly"}
+          onChange={() => setPlan(item.key,"monthly")}
+          className="accent-ark-price"
+        />
         {discountedLabel} / month
       </label>
       <label className="flex items-center gap-2 text-ark-btn-text">
-        <input type="radio" name={`plan-${item.key}`} className="accent-ark-price" />
+        <input
+          type="radio"
+          name={`plan-${item.key}`}
+          checked={selected === "every_3_months"}
+          onChange={() => setPlan(item.key,"every_3_months")}
+          className="accent-ark-price"
+        />
         {discountedLabel} every 3 months
       </label>
     </fieldset>
