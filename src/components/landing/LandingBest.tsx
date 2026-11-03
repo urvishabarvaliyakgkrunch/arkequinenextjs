@@ -11,10 +11,11 @@ import AddToCartButton from "@/components/cart/AddToCartButton";
 
 const ROUND_ADD = "flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-graphite text-[19px] text-white transition-all duration-300 ease-lt hover:scale-[1.08] hover:bg-teal";
 
-// WPGraphQL returns price pre-formatted with the currency symbol (e.g. "€29.00") — split it back apart for this layout.
+// WPGraphQL returns price pre-formatted with the currency symbol (e.g. "€29.00", or a range "€45.00 - €205.00"
+// for variable products) — strip just the currency symbol here, keep the " - " separator so ranges stay readable.
 function splitPrice(price: string | null): string {
   if (!price) return "0.00";
-  return price.replace(/[^0-9.,]/g, "");
+  return price.replace(/[^0-9.,\-\s]/g, "").trim();
 }
 
 function Price({ value, cls }: { value: string; cls: string }) {

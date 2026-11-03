@@ -9,6 +9,7 @@ import { useCartStore } from "@/store/cart";
 // Header basket: reads the same cart store as the add-to-cart buttons and the /cart page, so every page stays in sync.
 export default function CartIcon() {
   const cart = useCartStore((s) => s.cart);
+  const lastKnownCount = useCartStore((s) => s.lastKnownCount);
   const hydrate = useCartStore((s) => s.hydrate);
 
   useEffect(() => {
@@ -16,7 +17,9 @@ export default function CartIcon() {
   }, [hydrate]);
 
   const items = cart?.items ?? [];
-  const count = cart?.items_count ?? 0;
+  // Falls back to the last known count when the backend hydrate fails (e.g. a WP database hiccup),
+  // instead of flashing 0 for a cart that still genuinely has items.
+  const count = cart?.items_count ?? lastKnownCount;
   const subtotal = cart ? formatMoney(cart.totals.total_price, cart.totals) : "";
   return (
     <div className="group relative shrink-0 lg:absolute lg:top-1/2 lg:-right-[2px] lg:-translate-y-1/2">
@@ -47,8 +50,12 @@ export default function CartIcon() {
           className="absolute top-[3px] right-[10px] h-[10px] w-[10px] rotate-45 border-t border-l border-border bg-white"
         />
         <div className="relative rounded-[2px] border border-border bg-white text-left shadow-[0_10px_15px_rgba(0,0,0,0.1)]">
-          {count === 0 ? (
-            <p className="p-[10px] text-[11px] leading-[18px] text-muted">No products in the basket.</p>
+          {/* `items` only exists once a real cart response has landed — the badge's lastKnownCount fallback
+              shouldn't make this dropdown claim items it can't actually list yet. */}
+          {items.length === 0 ? (
+            <p className="p-[10px] text-[11px] leading-[18px] text-muted">
+              {count > 0 ? "Loading basket…" : "No products in the basket."}
+            </p>
           ) : (
             <>
               <ul>

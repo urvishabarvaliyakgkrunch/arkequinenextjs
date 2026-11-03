@@ -31,8 +31,23 @@ export function quantityToPlan(quantity: number): SubscriptionPlan {
   return quantity === 3 ? "every_3_months" : "one_time";
 }
 
+// Backend WP database drops intermittently (seen 500s from Store API) — without this, a failed hydrate
+// leaves `cart` null and the header badge flashes 0 even though the real cart still has items.
+const LAST_COUNT_KEY = "wc_cart_last_count";
+
+function readLastCount(): number {
+  if (typeof window === "undefined") return 0;
+  return Number(localStorage.getItem(LAST_COUNT_KEY)) || 0;
+}
+
+function persistCount(count: number) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(LAST_COUNT_KEY, String(count));
+}
+
 interface CartState {
   cart: StoreApiCart | null;
+  lastKnownCount: number;
   pendingId: number | null;
   justAddedId: number | null;
   pendingKey: string | null;
@@ -69,6 +84,7 @@ let hydrating: Promise<void> | null = null;
 
 export const useCartStore = create<CartState>((set, get) => ({
   cart: null,
+  lastKnownCount: readLastCount(),
   pendingId: null,
   justAddedId: null,
   pendingKey: null,
@@ -79,7 +95,10 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   hydrate: () => {
     hydrating ??= getCart()
-      .then((cart) => set({ cart }))
+      .then((cart) => {
+        persistCount(cart.items_count);
+        set({ cart, lastKnownCount: cart.items_count });
+      })
       .finally(() => {
         hydrating = null;
       });
@@ -90,7 +109,8 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ pendingId: id });
     try {
       const cart = await apiAddToCart(id, quantity);
-      set({ cart, pendingId: null, lastAdded: { name, image }, justAddedId: id });
+      persistCount(cart.items_count);
+      set({ cart, lastKnownCount: cart.items_count, pendingId: null, lastAdded: { name, image }, justAddedId: id });
       // Checkmark badge over the product image fades back out on its own, like the live site's.
       setTimeout(() => {
         set((s) => (s.justAddedId === id ? { justAddedId: null } : {}));
@@ -105,12 +125,13 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ pendingKey: key });
     try {
       const cart = await apiUpdateItemQuantity(key, quantity);
+      persistCount(cart.items_count);
       // A direct +/- quantity edit invalidates any staged/confirmed plan for this item — let it
       // fall back to being derived from the new real quantity instead of lying about the plan.
       set((s) => {
         const { [key]: _selected, ...selectedPlans } = s.selectedPlans;
         const { [key]: _confirmed, ...confirmedPlans } = s.confirmedPlans;
-        return { cart, pendingKey: null, selectedPlans, confirmedPlans };
+        return { cart, lastKnownCount: cart.items_count, pendingKey: null, selectedPlans, confirmedPlans };
       });
     } catch (err) {
       set({ pendingKey: null });
@@ -122,7 +143,8 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ pendingKey: key });
     try {
       const cart = await apiRemoveItem(key);
-      set({ cart, pendingKey: null });
+      persistCount(cart.items_count);
+      set({ cart, lastKnownCount: cart.items_count, pendingKey: null });
     } catch (err) {
       set({ pendingKey: null });
       throw err;

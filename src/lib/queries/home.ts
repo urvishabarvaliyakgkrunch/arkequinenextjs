@@ -1,5 +1,5 @@
 // src/lib/queries/home.ts
-import { gql } from "@/lib/graphql";
+import { gql, PRODUCTS_TAG } from "@/lib/graphql";
 import { PRODUCT_CARD_FIELDS } from "@/lib/queries/fragments";
 import type { ProductCardFields } from "@/types/product";
 
@@ -52,13 +52,14 @@ const GET_BEST_SELLERS = `
   }
 `;
 
-// No revalidate/cache — always the live admin-managed bestsellers list, per the one-query-per-homepage rule.
+// Cached like every other catalog query (clauderules D1) — admin bestseller changes still land within an hour,
+// or instantly via /api/revalidate tagged "products".
 export async function getBestSellers(): Promise<BestSellerProduct[]> {
   try {
     const data = await gql<{ productCategory: { products: { nodes: BestSellerProduct[] } } | null }>(
       GET_BEST_SELLERS,
       {},
-      { revalidate: 0 },
+      { revalidate: 3600, tags: [PRODUCTS_TAG] },
     );
     return data.productCategory?.products.nodes ?? [];
   } catch {
