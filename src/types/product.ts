@@ -42,6 +42,7 @@ export interface CategoryPageData {
     name: string;
     slug: string;
     description: string | null;
+    image: { sourceUrl: string; altText: string | null } | null;
     products: {
       nodes: ProductCardFields[];
     };
@@ -74,17 +75,6 @@ export interface ProductTab {
   hasRawLineBreaks: boolean;
 }
 
-export interface RelatedProduct {
-  databaseId: number;
-  name: string;
-  slug: string;
-  shortDescription: string;
-  price: string;
-  regularPrice: string;
-  isOnSale: boolean;
-  image: ProductImage | null;
-}
-
 // One post tag shown in the "Education Articles" box
 export interface EducationTag {
   databaseId: number;
@@ -109,7 +99,7 @@ export interface ProductPageData {
   primaryCategory: ProductTerm | null;
   tags: ProductTerm[];
   tabs: ProductTab[];
-  related: RelatedProduct[];
+  related: ProductCardFields[];
   educationTags: EducationTag[];
 }
 
@@ -133,14 +123,17 @@ export interface GqlProduct {
   stockStatus?: string | null;
   related?: {
     nodes: {
+      __typename: ProductTypename;
+      id: string;
       databaseId: number;
       name: string;
       slug: string;
       shortDescription?: string | null;
       price?: string | null;
       regularPrice?: string | null;
-      onSale?: boolean | null;
-      image?: ProductImage | null;
+      salePrice?: string | null;
+      stockStatus?: string | null;
+      image?: { sourceUrl: string; altText?: string | null } | null;
     }[];
   } | null;
 }

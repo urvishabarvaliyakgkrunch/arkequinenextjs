@@ -98,7 +98,7 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
       </div>
 
       {/* Thumbnails are always shown, like on the live site */}
-      <ul className="grid grid-cols-3 gap-[10px] py-[10px]">
+      <ul className="grid grid-cols-[repeat(3,132px)] py-[10px]">
         {images.map((image, index) => (
           <li key={image.sourceUrl}>
             <button

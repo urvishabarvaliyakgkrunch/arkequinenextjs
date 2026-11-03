@@ -27,7 +27,7 @@ export default function AddToCartButton({
         e.preventDefault();
         addItem(productId, name, image).catch(() => {});
       }}
-      className="flex flex-1 cursor-pointer items-center justify-center gap-1 text-center disabled:cursor-wait"
+      className="flex flex-1 cursor-pointer items-center justify-center gap-1 p-[3px] text-center leading-[15px] disabled:cursor-wait"
     >
       {isPending ? "Adding…" : children}
     </button>

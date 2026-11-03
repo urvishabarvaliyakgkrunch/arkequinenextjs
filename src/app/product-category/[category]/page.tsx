@@ -7,6 +7,7 @@ import ProductCategoriesSidebar from "@/components/shop/ProductCategoriesSidebar
 import EducationArticles from "@/components/shop/EducationArticles";
 import PageHeaderBar from "@/components/shop/PageHeaderBar";
 import ShopToolbar from "@/components/shop/ShopToolbar";
+import CategoryBanner from "@/components/shop/CategoryBanner";
 
 export default async function ProductCategoryPage({
   params,
@@ -35,7 +36,11 @@ export default async function ProductCategoryPage({
         ]}
       />
       <main className="mx-auto flex max-w-[1210px] flex-col gap-8 px-4 py-[25px] lg:flex-row lg:gap-12">
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
+          <CategoryBanner
+            image={data.productCategory.image}
+            description={data.productCategory.description}
+          />
           <ShopToolbar defaultOrderby={orderby ?? ""} defaultPerPage={first} />
           <ProductGrid
             products={data.productCategory.products.nodes}

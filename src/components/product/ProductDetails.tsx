@@ -28,8 +28,15 @@ export default function ProductDetails({ product }: { product: ProductPageData }
             <ProductTabs tabs={product.tabs} />
           </div>
         </div>
+      </div>
 
-        <RelatedProducts products={product.related} />
+      {/* Live site puts "People also liked" in its own full-width grey band */}
+      <div className="mt-[38px] border-t border-border bg-bg-soft">
+        <div className="mx-auto max-w-[1310px] px-4 py-5 md:px-[50px]">
+          <div className="my-[30px]">
+            <RelatedProducts products={product.related} />
+          </div>
+        </div>
       </div>
     </main>
   );

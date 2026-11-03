@@ -12,18 +12,22 @@ export default function ProductSummary({ product }: { product: ProductPageData }
       </h1>
 
       {product.price && (
-        <p className="my-[12.75px] text-[15px] font-bold leading-6 text-primary">
+        <p className="mb-[15px] mt-[15.6px] text-[15px] font-bold leading-6 text-primary">
           {/* Old price is crossed out only when WooCommerce says it is on sale */}
           {product.isOnSale && product.regularPrice && (
             <del className="mr-2 font-normal text-meta">{product.regularPrice}</del>
           )}
           {product.price}
+          {/* Guests always see the subscription plugin's 10% default, same as the shop cards */}
+          <small className="text-[12px]">
+            {" "}— or subscribe to save <span className="text-[15px]">10%</span>
+          </small>
         </p>
       )}
 
       {/* Short text is HTML written in WordPress admin, so it is rendered as HTML */}
       <div
-        className="mb-[25px] text-[17px] leading-[28.05px] text-black [&_p]:m-0"
+        className="mb-[25px] text-[17px] leading-[28.05px] text-black [&_p]:m-0 opacity-80"
         dangerouslySetInnerHTML={{ __html: product.shortDescription }}
       />
 

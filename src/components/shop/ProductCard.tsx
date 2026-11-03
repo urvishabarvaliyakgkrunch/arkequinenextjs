@@ -10,13 +10,15 @@ import AddToCartOverlay from "@/components/cart/AddToCartOverlay";
 export default function ProductCard({ product }: { product: ProductCardFields }) {
   const hasSale = Boolean(product.salePrice) && product.salePrice !== product.regularPrice;
   const description = stripHtml(product.shortDescription);
+  // Live site renders price ranges with an en dash
+  const price = product.price?.replace(" - ", " – ");
   // Variable products need a variation chosen first (live site shows "Select options") — only simple products add straight to cart.
   const canAddDirectly = product.__typename === "SimpleProduct";
 
   return (
     <article className="group flex h-full flex-col border border-ark-border bg-white">
       <Link href={`/product/${product.slug}`} className="flex flex-1 flex-col">
-        <div className="relative aspect-square w-full bg-[#F5F5F5]">
+        <div className="relative aspect-square w-full border-b border-ark-border bg-[#F5F5F5]">
           {product.image ? (
             <Image
               src={product.image.sourceUrl}
@@ -39,10 +41,10 @@ export default function ProductCard({ product }: { product: ProductCardFields })
           </h2>
 
           {description ? (
-            <p className="text-[17px] leading-[28px] text-black">{description}</p>
+            <p className="text-[17px] leading-[28px] text-black opacity-80">{description}</p>
           ) : null}
 
-          <div className="mt-auto flex flex-wrap items-baseline gap-x-2 text-[15px] font-semibold text-ark-price">
+          <div className="mt-auto flex flex-wrap items-baseline gap-x-2 text-[15px] leading-6 font-semibold text-ark-price">
             {hasSale ? (
               <>
                 <span className="text-ark-price-strike line-through">
@@ -51,7 +53,7 @@ export default function ProductCard({ product }: { product: ProductCardFields })
                 <span>{product.salePrice}</span>
               </>
             ) : (
-              <span>{product.price}</span>
+              <span>{price}</span>
             )}
             {/* Guest-facing default from the live site's subscription plugin (WCSATT) — the real % is computed
                 server-side per visitor and isn't exposed via GraphQL, but guests always see the 10% default. */}
@@ -65,16 +67,19 @@ export default function ProductCard({ product }: { product: ProductCardFields })
       <div className="flex border-t border-ark-border p-[10px] text-[11px] font-semibold text-ark-btn-text opacity-20 transition-opacity duration-300 group-hover:opacity-100">
         {canAddDirectly ? (
           <AddToCartButton productId={product.databaseId} name={product.name} image={product.image?.sourceUrl}>
-            <BasketIcon /> Add to Cart
+            <BasketIcon /> Add to basket
           </AddToCartButton>
         ) : (
-          <Link href={`/product/${product.slug}`} className="flex flex-1 items-center justify-center gap-1 text-center">
+          <Link href={`/product/${product.slug}`} className="flex flex-1 items-center justify-center gap-1 p-[3px] text-center leading-[15px]">
             <BasketIcon /> Select options
           </Link>
         )}
-        <Link href={`/product/${product.slug}`} className="flex flex-1 items-center justify-center gap-1 text-center">
-          <DocIcon /> Show Details
-        </Link>
+        {/* Live shows only "Select options" on variable products — no Show Details beside it */}
+        {canAddDirectly ? (
+          <Link href={`/product/${product.slug}`} className="flex flex-1 items-center justify-center gap-1 p-[3px] text-center leading-[15px]">
+            <DocIcon /> Show Details
+          </Link>
+        ) : null}
       </div>
     </article>
   );

@@ -11,15 +11,46 @@ function readMeta(product: GqlProduct, key: string): string | null {
   return product.metaData?.find((row) => row.key === key)?.value ?? null;
 }
 
-// The Composition / Instructions tabs are saved by a plugin as JSON text
+// The Composition / Instructions tabs are saved by the plugin as PHP-serialized text
+// Minimal reader for arrays, strings and numbers (lengths are in UTF-8 bytes)
+function readPhp(buf: Buffer, pos: { i: number }): unknown {
+  const type = String.fromCharCode(buf[pos.i]);
+  if (type === "s") {
+    const lenEnd = buf.indexOf(":", pos.i + 2);
+    const len = Number(buf.toString("utf8", pos.i + 2, lenEnd));
+    const start = lenEnd + 2;
+    pos.i = start + len + 2;
+    return buf.toString("utf8", start, start + len);
+  }
+  if (type === "i" || type === "d") {
+    const end = buf.indexOf(";", pos.i);
+    const value = Number(buf.toString("utf8", pos.i + 2, end));
+    pos.i = end + 1;
+    return value;
+  }
+  if (type === "a") {
+    const countEnd = buf.indexOf(":", pos.i + 2);
+    const count = Number(buf.toString("utf8", pos.i + 2, countEnd));
+    pos.i = countEnd + 2;
+    const result: Record<string, unknown> = {};
+    for (let n = 0; n < count; n++) {
+      const key = String(readPhp(buf, pos));
+      result[key] = readPhp(buf, pos);
+    }
+    pos.i += 1;
+    return result;
+  }
+  throw new Error("Unsupported serialized type");
+}
+
 function parseCustomTabs(raw: string | null): ProductTab[] {
   if (!raw) return [];
 
   try {
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
+    const parsed = readPhp(Buffer.from(raw, "utf8"), { i: 0 });
+    if (typeof parsed !== "object" || parsed === null) return [];
 
-    return parsed.flatMap((item: unknown): ProductTab[] => {
+    return Object.values(parsed).flatMap((item: unknown): ProductTab[] => {
       if (typeof item !== "object" || item === null) return [];
       const { id, title, content } = item as Record<string, unknown>;
 
@@ -31,7 +62,7 @@ function parseCustomTabs(raw: string | null): ProductTab[] {
       return [{ id, title, content, hasRawLineBreaks: true }];
     });
   } catch {
-    // Bad JSON should hide the extra tabs, not break the whole page
+    // Bad data should hide the extra tabs, not break the whole page
     return [];
   }
 }
@@ -86,14 +117,19 @@ export function mapProduct(
     tags: product.productTags?.nodes ?? [],
     tabs: [...descriptionTab, ...customTabs],
     related: (product.related?.nodes ?? []).map((item) => ({
+      __typename: item.__typename,
+      id: item.id,
       databaseId: item.databaseId,
       name: item.name,
       slug: item.slug,
-      shortDescription: item.shortDescription ?? "",
-      price: item.price ?? "",
-      regularPrice: item.regularPrice ?? "",
-      isOnSale: Boolean(item.onSale),
-      image: item.image ?? null,
+      shortDescription: item.shortDescription ?? null,
+      image: item.image
+        ? { sourceUrl: item.image.sourceUrl, altText: item.image.altText ?? "" }
+        : null,
+      price: item.price ?? null,
+      regularPrice: item.regularPrice ?? null,
+      salePrice: item.salePrice ?? null,
+      stockStatus: item.stockStatus ?? null,
     })),
     // A tag can come back null when WordPress hides it
     educationTags: tags.filter((tag): tag is EducationTag => tag !== null),

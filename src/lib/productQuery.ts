@@ -28,13 +28,15 @@ export const PRODUCT_PAGE_QUERY = `
       ... on InventoriedProduct { stockStatus }
       related(first: 4) {
         nodes {
+          __typename
+          id
           databaseId
           name
           slug
           shortDescription
-          onSale
-          image { ${IMAGE_FIELDS} }
-          ... on ProductWithPricing { price regularPrice }
+          image { sourceUrl altText }
+          ... on ProductWithPricing { price regularPrice salePrice }
+          ... on InventoriedProduct { stockStatus }
         }
       }
     }

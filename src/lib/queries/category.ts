@@ -14,6 +14,10 @@ const GET_CATEGORY_PRODUCTS = `
       name
       slug
       description
+      image {
+        sourceUrl(size: ENTRY_WITH_SIDEBAR)
+        altText
+      }
       products(first: $first, where: { typeIn: [SIMPLE, VARIABLE], orderby: $orderby }) {
         nodes {
           ...ProductCardFields
