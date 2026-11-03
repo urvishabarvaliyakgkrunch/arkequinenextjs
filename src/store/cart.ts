@@ -67,7 +67,7 @@ export function getConfirmedPlan(
 // One cart read at a time: header icon and cart page both hydrate on mount, they share the same request
 let hydrating: Promise<void> | null = null;
 
-export const useCartStore = create<CartState>((set) => ({
+export const useCartStore = create<CartState>((set, get) => ({
   cart: null,
   pendingId: null,
   justAddedId: null,

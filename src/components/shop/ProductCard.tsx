@@ -79,7 +79,6 @@ export default function ProductCard({
           <AddToCartButton productId={product.databaseId} name={product.name} image={product.image?.sourceUrl}>
             <BasketIcon /> Add to basket
           </AddToCartButton>
-<<<<<<< Updated upstream
         ) : (
           <Link href={`/product/${product.slug}`} className="flex flex-1 items-center justify-center gap-1 p-[3px] text-center leading-[15px]">
             <BasketIcon /> Select options
@@ -91,16 +90,6 @@ export default function ProductCard({
             <DocIcon /> Show Details
           </Link>
         ) : null}
-=======
-        ) : purchasable ? (
-          <Link href={`/product/${product.slug}`} className="flex flex-1 items-center justify-center gap-1 text-center">
-            <BasketIcon /> Select options
-          </Link>
-        ) : null}
-        <Link href={`/product/${product.slug}`} className="flex flex-1 items-center justify-center gap-1 text-center">
-          <DocIcon /> Show Details
-        </Link>
->>>>>>> Stashed changes
       </div>
     </article>
   );

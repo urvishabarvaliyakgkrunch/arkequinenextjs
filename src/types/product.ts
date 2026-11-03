@@ -135,7 +135,8 @@ export interface GqlProduct {
   stockStatus?: string | null;
   related?: {
     nodes: {
-      __typename?: ProductTypename;
+      __typename: ProductTypename;
+      id: string;
       databaseId: number;
       name: string;
       slug: string;

@@ -58,13 +58,9 @@ export default function AddToCartForm({
       </div>
       <button
         type="button"
-<<<<<<< Updated upstream
-        className="h-[42px] cursor-pointer rounded-[2px] bg-primary px-[15px] text-xs text-white transition-colors duration-300 ease-out hover:bg-secondary"
-=======
         disabled={isPending}
         onClick={() => addItem(productId, name, image, quantity).catch(() => {})}
-        className="h-[42px] cursor-pointer rounded-[2px] bg-primary px-[15px] text-xs text-white hover:bg-primary-alt disabled:cursor-wait disabled:opacity-70"
->>>>>>> Stashed changes
+        className="h-[42px] cursor-pointer rounded-[2px] bg-primary px-[15px] text-xs text-white transition-colors duration-300 ease-out hover:bg-secondary disabled:cursor-wait disabled:opacity-70"
       >
         {isPending ? "Adding…" : "Add to basket"}
       </button>

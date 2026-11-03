@@ -31,11 +31,7 @@ export default function AddToCartButton({
         e.preventDefault();
         addItem(productId, name, image, quantity).catch(() => {});
       }}
-<<<<<<< Updated upstream
-      className="flex flex-1 cursor-pointer items-center justify-center gap-1 p-[3px] text-center leading-[15px] disabled:cursor-wait"
-=======
       className={`${className} disabled:cursor-wait`}
->>>>>>> Stashed changes
     >
       {isPending ? "Adding…" : children}
     </button>

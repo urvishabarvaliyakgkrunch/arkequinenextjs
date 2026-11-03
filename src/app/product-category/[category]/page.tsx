@@ -5,11 +5,7 @@ import CategoryListing from "@/components/shop/CategoryListing";
 import ProductCategoriesSidebar from "@/components/shop/ProductCategoriesSidebar";
 import EducationArticles from "@/components/shop/EducationArticles";
 import PageHeaderBar from "@/components/shop/PageHeaderBar";
-<<<<<<< Updated upstream
-import ShopToolbar from "@/components/shop/ShopToolbar";
 import CategoryBanner from "@/components/shop/CategoryBanner";
-=======
->>>>>>> Stashed changes
 
 // Static + refreshed hourly (rule D1). Sort / per-page are handled client-side by CategoryListing, so no searchParams here.
 export const revalidate = 3600;
@@ -37,26 +33,12 @@ export default async function ProductCategoryPage({ params }: { params: Promise<
         ]}
       />
       <main className="mx-auto flex max-w-[1210px] flex-col gap-8 px-4 py-[25px] lg:flex-row lg:gap-12">
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
         <div className="min-w-0 flex-1">
           <CategoryBanner
             image={data.productCategory.image}
             description={data.productCategory.description}
           />
-          <ShopToolbar defaultOrderby={orderby ?? ""} defaultPerPage={first} />
-          <ProductGrid
-            products={data.productCategory.products.nodes}
-            columnsClassName="grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
-          />
-=======
-        <div className="flex-1">
           <CategoryListing slug={data.productCategory.slug} initialProducts={data.productCategory.products.nodes} />
->>>>>>> Stashed changes
-=======
-        <div className="flex-1">
-          <CategoryListing slug={data.productCategory.slug} initialProducts={data.productCategory.products.nodes} />
->>>>>>> Stashed changes
         </div>
         <div className="w-full lg:w-[325px] lg:shrink-0">
           <ProductCategoriesSidebar
