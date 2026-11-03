@@ -29,7 +29,10 @@ export const PRODUCT_PAGE_QUERY = `
       related(first: 4) {
         nodes {
           __typename
+<<<<<<< Updated upstream
           id
+=======
+>>>>>>> Stashed changes
           databaseId
           name
           slug

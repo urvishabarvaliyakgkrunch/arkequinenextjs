@@ -2,10 +2,23 @@
 "use client";
 
 import { useState } from "react";
+import { useCartStore } from "@/store/cart";
 
-// Quantity box and button; real cart wiring comes with the cart task (P1-12)
-export default function AddToCartForm({ isInStock }: { isInStock: boolean }) {
+// Quantity box and button; adds through the shared cart store, so the header basket and toast update too
+export default function AddToCartForm({
+  productId,
+  name,
+  image,
+  isInStock,
+}: {
+  productId: number;
+  name: string;
+  image?: string;
+  isInStock: boolean;
+}) {
   const [quantity, setQuantity] = useState(1);
+  const addItem = useCartStore((s) => s.addItem);
+  const isPending = useCartStore((s) => s.pendingId === productId);
 
   // Never let the quantity drop below 1
   const change = (step: number) => setQuantity((q) => Math.max(1, q + step));
@@ -45,9 +58,15 @@ export default function AddToCartForm({ isInStock }: { isInStock: boolean }) {
       </div>
       <button
         type="button"
+<<<<<<< Updated upstream
         className="h-[42px] cursor-pointer rounded-[2px] bg-primary px-[15px] text-xs text-white transition-colors duration-300 ease-out hover:bg-secondary"
+=======
+        disabled={isPending}
+        onClick={() => addItem(productId, name, image, quantity).catch(() => {})}
+        className="h-[42px] cursor-pointer rounded-[2px] bg-primary px-[15px] text-xs text-white hover:bg-primary-alt disabled:cursor-wait disabled:opacity-70"
+>>>>>>> Stashed changes
       >
-        Add to basket
+        {isPending ? "Adding…" : "Add to basket"}
       </button>
     </div>
     <button

@@ -117,8 +117,13 @@ export function mapProduct(
     tags: product.productTags?.nodes ?? [],
     tabs: [...descriptionTab, ...customTabs],
     related: (product.related?.nodes ?? []).map((item) => ({
+<<<<<<< Updated upstream
       __typename: item.__typename,
       id: item.id,
+=======
+      // Unknown type falls back to "variable" so the card links to the product instead of adding blindly
+      type: item.__typename ?? "VariableProduct",
+>>>>>>> Stashed changes
       databaseId: item.databaseId,
       name: item.name,
       slug: item.slug,

@@ -44,7 +44,7 @@ interface CartState {
   confirmedPlans: Record<string, SubscriptionPlan>;
   applyingPlans: boolean;
   hydrate: () => Promise<void>;
-  addItem: (id: number, name: string, image?: string) => Promise<void>;
+  addItem: (id: number, name: string, image?: string, quantity?: number) => Promise<void>;
   updateQuantity: (key: string, quantity: number) => Promise<void>;
   removeItem: (key: string) => Promise<void>;
   applyCoupon: (code: string) => Promise<void>;
@@ -64,7 +64,10 @@ export function getConfirmedPlan(
 }
 
 // Mirrors the WooCommerce Store API cart client-side for instant UI feedback — the Store API response is always the source of truth.
-export const useCartStore = create<CartState>((set, get) => ({
+// One cart read at a time: header icon and cart page both hydrate on mount, they share the same request
+let hydrating: Promise<void> | null = null;
+
+export const useCartStore = create<CartState>((set) => ({
   cart: null,
   pendingId: null,
   justAddedId: null,
@@ -74,15 +77,19 @@ export const useCartStore = create<CartState>((set, get) => ({
   confirmedPlans: {},
   applyingPlans: false,
 
-  hydrate: async () => {
-    const cart = await getCart();
-    set({ cart });
+  hydrate: () => {
+    hydrating ??= getCart()
+      .then((cart) => set({ cart }))
+      .finally(() => {
+        hydrating = null;
+      });
+    return hydrating;
   },
 
-  addItem: async (id, name, image) => {
+  addItem: async (id, name, image, quantity = 1) => {
     set({ pendingId: id });
     try {
-      const cart = await apiAddToCart(id, 1);
+      const cart = await apiAddToCart(id, quantity);
       set({ cart, pendingId: null, lastAdded: { name, image }, justAddedId: id });
       // Checkmark badge over the product image fades back out on its own, like the live site's.
       setTimeout(() => {

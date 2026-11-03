@@ -7,9 +7,12 @@ import type { ProductCardFields } from "@/types/product";
 export default function ProductGrid({
   products,
   columnsClassName = "grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+  priorityCount = 4,
 }: {
   products: ProductCardFields[];
   columnsClassName?: string;
+  // First row loads eagerly (LCP); the rest stay lazy
+  priorityCount?: number;
 }) {
   if (products.length === 0) {
     return <p className="py-12 text-center text-ark-btn-text">No products found.</p>;
@@ -17,8 +20,8 @@ export default function ProductGrid({
 
   return (
     <div className={`grid ${columnsClassName}`}>
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+      {products.map((product, index) => (
+        <ProductCard key={product.id} product={product} priority={index < priorityCount} />
       ))}
     </div>
   );

@@ -75,6 +75,18 @@ export interface ProductTab {
   hasRawLineBreaks: boolean;
 }
 
+export interface RelatedProduct {
+  type: ProductTypename;
+  databaseId: number;
+  name: string;
+  slug: string;
+  shortDescription: string;
+  price: string;
+  regularPrice: string;
+  isOnSale: boolean;
+  image: ProductImage | null;
+}
+
 // One post tag shown in the "Education Articles" box
 export interface EducationTag {
   databaseId: number;
@@ -123,8 +135,7 @@ export interface GqlProduct {
   stockStatus?: string | null;
   related?: {
     nodes: {
-      __typename: ProductTypename;
-      id: string;
+      __typename?: ProductTypename;
       databaseId: number;
       name: string;
       slug: string;

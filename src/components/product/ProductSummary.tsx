@@ -33,7 +33,12 @@ export default function ProductSummary({ product }: { product: ProductPageData }
 
       {/* Only simple products can be bought from here for now */}
       {product.type === "SimpleProduct" && (
-        <AddToCartForm isInStock={product.isInStock} />
+        <AddToCartForm
+          productId={product.databaseId}
+          name={product.name}
+          image={product.images[0]?.sourceUrl}
+          isInStock={product.isInStock}
+        />
       )}
 
       <ProductMeta

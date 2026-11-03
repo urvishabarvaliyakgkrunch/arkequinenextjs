@@ -1,5 +1,5 @@
 // src/lib/menu.ts
-import { gql } from "@/lib/graphql";
+import { gql, MENU_TAG } from "@/lib/graphql";
 import type { NavLink, SubLink } from "@/components/layout/navLinks";
 
 type WpItem = { label: string; url: string | null; target: string | null; childItems?: { nodes: WpItem[] } };
@@ -64,7 +64,7 @@ export async function getNavLinks(): Promise<NavLink[]> {
   const data = await gql<{ menu: { menuItems: { nodes: WpItem[] } } | null }>(
     MENU_QUERY,
     {},
-    { revalidate: 86400 },
+    { revalidate: 86400, tags: [MENU_TAG] },
   );
   return data.menu?.menuItems.nodes.map(toNav) ?? [];
 }

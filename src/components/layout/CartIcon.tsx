@@ -2,25 +2,26 @@
 "use client";
 
 import { useEffect } from "react";
-import { useCartStore } from "@/store/cart";
+import Link from "next/link";
 import { formatMoney } from "@/lib/storeApi";
+import { useCartStore } from "@/store/cart";
 
+// Header basket: reads the same cart store as the add-to-cart buttons and the /cart page, so every page stays in sync.
 export default function CartIcon() {
   const cart = useCartStore((s) => s.cart);
   const hydrate = useCartStore((s) => s.hydrate);
 
   useEffect(() => {
-    hydrate();
+    hydrate().catch(() => {});
   }, [hydrate]);
 
   const items = cart?.items ?? [];
   const count = cart?.items_count ?? 0;
-  const subtotal = cart ? formatMoney(cart.totals.total_items, cart.totals) : "";
-
+  const subtotal = cart ? formatMoney(cart.totals.total_price, cart.totals) : "";
   return (
     <div className="group relative shrink-0 lg:absolute lg:top-1/2 lg:-right-[2px] lg:-translate-y-1/2">
-      <a
-        href="/basket"
+      <Link
+        href="/cart"
         aria-label="Shopping Cart"
         className="relative flex h-[46px] w-[46px] items-center justify-center rounded-[2px] border border-border bg-white text-ink-dark transition-colors duration-300 group-hover:text-primary"
       >
@@ -38,7 +39,7 @@ export default function CartIcon() {
             {count}
           </span>
         )}
-      </a>
+      </Link>
       {/* Mini-cart: opens on hover/focus like the live site. */}
       <div className="invisible absolute top-full right-[7px] z-[300] w-[280px] pt-[8px] opacity-0 transition-opacity duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
         <span
@@ -57,17 +58,18 @@ export default function CartIcon() {
                     className="flex items-center justify-between gap-[10px] border-b border-border p-[12px] last:border-b-0 hover:bg-[#e1e1e1]"
                   >
                     <div className="min-w-0">
-                      <a href={item.permalink} className="block text-[12px] leading-[18px] font-bold text-ink-dark">
+                      <Link href="/cart" className="block text-[12px] leading-[18px] font-bold text-ink-dark">
                         {item.name}
-                      </a>
+                      </Link>
                       <span className="block text-[12px] leading-[18px] text-muted">
                         {item.quantity} × {formatMoney(item.prices.price, item.prices)}
                       </span>
                     </div>
                     <span className="h-[55px] w-[55px] shrink-0 border border-border bg-white">
-                      {item.images[0] && (
+                      {item.images[0]?.thumbnail && (
+                        // Cart thumbnails come from the Store API and can sit on any WP host, so no next/image here
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.images[0].thumbnail} alt={item.images[0].alt} className="h-full w-full object-contain" />
+                        <img src={item.images[0].thumbnail} alt="" loading="lazy" className="h-full w-full object-contain" />
                       )}
                     </span>
                   </li>
@@ -77,7 +79,7 @@ export default function CartIcon() {
                 <strong className="text-ink-dark">Subtotal:</strong> {subtotal}
               </p>
               <div className="flex bg-[#e1e1e1] text-[13px] font-bold text-ink-dark">
-                <a href="/basket" className="flex-1 py-[14px] text-center">View basket</a>
+                <Link href="/cart" className="flex-1 py-[14px] text-center">View basket</Link>
                 <a href={`${process.env.NEXT_PUBLIC_WP_URL}/checkout/`} className="flex-1 py-[14px] text-center">Checkout</a>
               </div>
             </>

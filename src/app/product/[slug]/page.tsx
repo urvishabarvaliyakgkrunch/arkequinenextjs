@@ -4,7 +4,14 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import ProductDetails from "@/components/product/ProductDetails";
 import ProductPageSkeleton from "@/components/product/ProductPageSkeleton";
-import { getProductPage } from "@/lib/products";
+import { getProductPage, getProductSlugs } from "@/lib/products";
+
+// Prebuilt + refreshed hourly (rule D1); slugs not prebuilt are generated on first visit and then cached
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  return (await getProductSlugs()).map((slug) => ({ slug }));
+}
 
 // Slug is read inside Suspense so Next can serve the page shell instantly
 async function ProductContent({ params }: PageProps<"/product/[slug]">) {

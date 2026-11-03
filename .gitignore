@@ -42,3 +42,4 @@ next-env.d.ts
 
 # Internal working docs (clauderules §0.3) — never committed
 PROJECT-CONTEXT.md
+PERFORMANCE-REPORT.md

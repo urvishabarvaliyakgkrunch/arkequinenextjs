@@ -7,13 +7,22 @@ import AddToCartButton from "@/components/cart/AddToCartButton";
 import AddToCartOverlay from "@/components/cart/AddToCartOverlay";
 
 // Shared by the shop page and every category page — one card design, used everywhere products are listed.
-export default function ProductCard({ product }: { product: ProductCardFields }) {
+// priority = above-the-fold image. purchasable=false is for static placeholder cards whose product is not in WooCommerce yet.
+export default function ProductCard({
+  product,
+  priority = false,
+  purchasable = true,
+}: {
+  product: ProductCardFields;
+  priority?: boolean;
+  purchasable?: boolean;
+}) {
   const hasSale = Boolean(product.salePrice) && product.salePrice !== product.regularPrice;
   const description = stripHtml(product.shortDescription);
   // Live site renders price ranges with an en dash
   const price = product.price?.replace(" - ", " – ");
   // Variable products need a variation chosen first (live site shows "Select options") — only simple products add straight to cart.
-  const canAddDirectly = product.__typename === "SimpleProduct";
+  const canAddDirectly = purchasable && product.__typename === "SimpleProduct";
 
   return (
     <article className="group flex h-full flex-col border border-ark-border bg-white">
@@ -24,6 +33,7 @@ export default function ProductCard({ product }: { product: ProductCardFields })
               src={product.image.sourceUrl}
               alt={product.image.altText || product.name}
               fill
+              priority={priority}
               className="object-cover"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />
@@ -69,6 +79,7 @@ export default function ProductCard({ product }: { product: ProductCardFields })
           <AddToCartButton productId={product.databaseId} name={product.name} image={product.image?.sourceUrl}>
             <BasketIcon /> Add to basket
           </AddToCartButton>
+<<<<<<< Updated upstream
         ) : (
           <Link href={`/product/${product.slug}`} className="flex flex-1 items-center justify-center gap-1 p-[3px] text-center leading-[15px]">
             <BasketIcon /> Select options
@@ -80,6 +91,16 @@ export default function ProductCard({ product }: { product: ProductCardFields })
             <DocIcon /> Show Details
           </Link>
         ) : null}
+=======
+        ) : purchasable ? (
+          <Link href={`/product/${product.slug}`} className="flex flex-1 items-center justify-center gap-1 text-center">
+            <BasketIcon /> Select options
+          </Link>
+        ) : null}
+        <Link href={`/product/${product.slug}`} className="flex flex-1 items-center justify-center gap-1 text-center">
+          <DocIcon /> Show Details
+        </Link>
+>>>>>>> Stashed changes
       </div>
     </article>
   );

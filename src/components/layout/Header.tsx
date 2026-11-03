@@ -64,6 +64,7 @@ function MegaMenu({ mega }: { mega: NonNullable<NavLink["mega"]> }) {
                   >
                     {it.image ? (
 
+                      // unoptimized on purpose: staging.ark-equine.com answers the image optimizer with a 504, so the browser loads it directly
                       <Image src={it.image} alt="" width={300} height={300} unoptimized className="mt-2 h-auto w-[150px]" />
 
                     ) : (
