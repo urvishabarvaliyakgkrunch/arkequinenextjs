@@ -28,3 +28,40 @@ export async function getProductsBySlug(slugs: string[]): Promise<Map<string, Pr
     return new Map();
   }
 }
+
+export interface BestSellerProduct extends ProductCardFields {
+  productCategories: { nodes: { name: string }[] } | null;
+}
+
+// The homepage's "Best Sellers" section — real products from the admin-managed "bestsellers" category.
+const GET_BEST_SELLERS = `
+  ${PRODUCT_CARD_FIELDS}
+  query GetBestSellers {
+    productCategory(id: "bestsellers", idType: SLUG) {
+      products(first: 12, where: { typeIn: [SIMPLE, VARIABLE] }) {
+        nodes {
+          ...ProductCardFields
+          productCategories(first: 1) {
+            nodes {
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+// No revalidate/cache — always the live admin-managed bestsellers list, per the one-query-per-homepage rule.
+export async function getBestSellers(): Promise<BestSellerProduct[]> {
+  try {
+    const data = await gql<{ productCategory: { products: { nodes: BestSellerProduct[] } } | null }>(
+      GET_BEST_SELLERS,
+      {},
+      { revalidate: 0 },
+    );
+    return data.productCategory?.products.nodes ?? [];
+  } catch {
+    return [];
+  }
+}

@@ -10,8 +10,9 @@ import LandingPet from "@/components/landing/LandingPet";
 import LandingArticles from "@/components/landing/LandingArticles";
 import LandingSubscribe from "@/components/landing/LandingSubscribe";
 import LandingPartners from "@/components/landing/LandingPartners";
+import type { BestSellerProduct } from "@/lib/queries/home";
 
-export default function LandingHome() {
+export default function LandingHome({ bestSellers }: { bestSellers: BestSellerProduct[] }) {
   return (
     <div className="overflow-x-clip bg-white font-sans leading-[1.6] text-graphite antialiased [scroll-behavior:smooth]">
       <LandingHero />
@@ -19,7 +20,7 @@ export default function LandingHome() {
       <LandingDual />
       <LandingShop />
       <LandingQuote />
-      <LandingBest />
+      <LandingBest products={bestSellers} />
       <LandingPano />
       <LandingPet />
       <LandingArticles />

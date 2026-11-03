@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { useCartStore } from "@/store/cart";
 import { formatMoney, type StoreApiCart } from "@/lib/storeApi";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 // Matches ark-equine.com/basket/'s "Calculate shipping" collapsible form + the live rate list it returns.
 // Countries limited to what the backend actually ships to (confirmed in the theme's delivery-country check).
@@ -79,24 +80,22 @@ export default function ShippingCalculator({ cart }: { cart: StoreApiCart }) {
     }
   }
 
-  if (!hasAddress && !open) {
-    return (
-      <div className="text-[13px] leading-[28px] text-[#919191]">
-        Enter your address to view shipping options.
-        <br />
-        <button type="button" onClick={() => setOpen(true)} className="cursor-pointer text-[13px] leading-[16px] text-ark-price">
-          Calculate shipping
-        </button>
-      </div>
-    );
-  }
-
   const { city: addrCity, state: addrState, postcode: addrPostcode } = cart.shipping_address;
   const countyLabel = IE_COUNTIES.find((c) => c.code === addrState)?.label || addrState;
   const addressLine = [addrCity, countyLabel, addrPostcode].filter(Boolean).join(", ");
 
   return (
     <div className="text-[13px] text-ark-btn-text">
+      {!hasAddress && (
+        <div className="mb-3 text-[13px] leading-[28px] text-[#919191]">
+          Enter your address to view shipping options.
+          <br />
+          <button type="button" onClick={() => setOpen((v) => !v)} className="cursor-pointer text-[13px] leading-[16px] text-ark-price">
+            Calculate shipping
+          </button>
+        </div>
+      )}
+
       {hasAddress && (
         <>
           {rates.map((rate) => {
@@ -142,18 +141,12 @@ export default function ShippingCalculator({ cart }: { cart: StoreApiCart }) {
             <label className="text-[13px] font-semibold text-ark-btn-text">
               Country/Region <span className="text-red-600">*</span>
             </label>
-            <select
+            <SearchableSelect
               value={country}
-              onChange={(e) => handleCountryChange(e.target.value)}
-              className="h-[38px] border border-ark-border px-2 text-[13px] text-ark-btn-text"
-            >
-              <option value="">Select a country / region…</option>
-              {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+              placeholder="Select a country / region…"
+              options={COUNTRIES}
+              onChange={handleCountryChange}
+            />
           </div>
           {country !== "NI" && (
             <div className="flex flex-col gap-1">
@@ -161,18 +154,12 @@ export default function ShippingCalculator({ cart }: { cart: StoreApiCart }) {
                 {country === "IE" ? "County" : "State / County"} <span className="text-red-600">*</span>
               </label>
               {country === "IE" ? (
-                <select
+                <SearchableSelect
                   value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  className="h-[38px] border border-ark-border px-2 text-[13px] text-ark-btn-text"
-                >
-                  <option value="">Select an option…</option>
-                  {IE_COUNTIES.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Select an option…"
+                  options={IE_COUNTIES}
+                  onChange={setState}
+                />
               ) : (
                 <input
                   type="text"
