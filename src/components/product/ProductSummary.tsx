@@ -31,14 +31,10 @@ export default function ProductSummary({ product }: { product: ProductPageData }
         dangerouslySetInnerHTML={{ __html: product.shortDescription }}
       />
 
-      {/* Only simple products can be bought from here for now */}
-      {product.type === "SimpleProduct" && (
-        <AddToCartForm
-          productId={product.databaseId}
-          name={product.name}
-          image={product.images[0]?.sourceUrl}
-          isInStock={product.isInStock}
-        />
+      {/* Simple products ("Add to basket" straight away) and variable products (pick an option first,
+          e.g. "Size" on Aquatabs InLine) can both be bought from here */}
+      {(product.type === "SimpleProduct" || product.type === "VariableProduct") && (
+        <AddToCartForm product={product} />
       )}
 
       <ProductMeta
