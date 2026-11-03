@@ -26,6 +26,7 @@ export default async function ProductCategoryPage({ params }: { params: Promise<
 
   return (
     <>
+      <CategoryBanner image={data.productCategory.image} title={data.productCategory.name} />
       <PageHeaderBar
         title={data.productCategory.name}
         breadcrumbs={[
@@ -36,7 +37,6 @@ export default async function ProductCategoryPage({ params }: { params: Promise<
       />
       <main className="mx-auto flex max-w-[1210px] flex-col gap-8 px-4 py-[25px] lg:flex-row lg:gap-12">
         <div className="min-w-0 flex-1">
-          <CategoryBanner image={data.productCategory.image} title={data.productCategory.name} />
           {description && (
             <div className="mb-[10px] text-left text-[12px] leading-[28.05px] text-[#57585a]">{description}</div>
           )}
