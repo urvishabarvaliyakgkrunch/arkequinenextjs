@@ -23,6 +23,9 @@ export async function POST(request: Request) {
   // Default clears products; ?tag=menu clears the nav menu, ?tag=all clears both
   const tag = url.searchParams.get("tag");
   const cleared = tag === "menu" ? [MENU_TAG] : tag === "all" ? [PRODUCTS_TAG, MENU_TAG] : [PRODUCTS_TAG];
-  cleared.forEach((t) => revalidateTag(t, { expire: 0 }));
+  // Default = stale-while-revalidate: visitors keep getting the old page while the new one builds in the background.
+  // ?now=1 expires immediately instead (next visit waits for WordPress, ~2-4 s).
+  const profile = url.searchParams.get("now") === "1" ? { expire: 0 } : "max";
+  cleared.forEach((t) => revalidateTag(t, profile));
   return NextResponse.json({ cleared, clearedAt: new Date().toISOString() });
 }
