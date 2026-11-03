@@ -2,9 +2,8 @@
 import type { Metadata } from "next";
 import { Lato } from "next/font/google";
 import localFont from "next/font/local";
-import Header from "@/components/layout/Header";
-import { getNavLinks } from "@/lib/menu";
-import Footer from "@/components/layout/Footer";
+import LandingHeader from "@/components/landing/LandingHeader";
+import LandingFooter from "@/components/landing/LandingFooter";
 import CartToast from "@/components/cart/CartToast";
 import "./globals.css";
 
@@ -22,19 +21,29 @@ const millar = localFont({
   display: "swap",
 });
 
+// Display serif of the landing redesign (all weights the template uses)
+const millarLanding = localFont({
+  variable: "--font-millar-landing",
+  src: [
+    { path: "./fonts/MillarLight.woff2", weight: "300", style: "normal" },
+    { path: "./fonts/MillarRegular.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/MillarItalic.woff2", weight: "400", style: "italic" },
+  ],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "ARK Equine",
   description: "Equine Feed | Horse Supplements | Horse Care",
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const navLinks = await getNavLinks();
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${lato.variable} ${millar.variable} h-full antialiased`}>
+    <html lang="en" className={`${lato.variable} ${millar.variable} ${millarLanding.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
-        <Header navLinks={navLinks} />
+        <LandingHeader />
         <main className="flex-1">{children}</main>
-        <Footer />
+        <LandingFooter />
         <CartToast />
       </body>
     </html>

@@ -21,7 +21,7 @@ export default function CartIcon() {
   return (
     <div className="group relative shrink-0 lg:absolute lg:top-1/2 lg:-right-[2px] lg:-translate-y-1/2">
       <Link
-        href="/cart"
+        href="/basket/"
         aria-label="Shopping Cart"
         className="relative flex h-[46px] w-[46px] items-center justify-center rounded-[2px] border border-border bg-white text-ink-dark transition-colors duration-300 group-hover:text-primary"
       >
@@ -58,7 +58,7 @@ export default function CartIcon() {
                     className="flex items-center justify-between gap-[10px] border-b border-border p-[12px] last:border-b-0 hover:bg-[#e1e1e1]"
                   >
                     <div className="min-w-0">
-                      <Link href="/cart" className="block text-[12px] leading-[18px] font-bold text-ink-dark">
+                      <Link href="/basket/" className="block text-[12px] leading-[18px] font-bold text-ink-dark">
                         {item.name}
                       </Link>
                       <span className="block text-[12px] leading-[18px] text-muted">
@@ -79,7 +79,7 @@ export default function CartIcon() {
                 <strong className="text-ink-dark">Subtotal:</strong> {subtotal}
               </p>
               <div className="flex bg-[#e1e1e1] text-[13px] font-bold text-ink-dark">
-                <Link href="/cart" className="flex-1 py-[14px] text-center">View basket</Link>
+                <Link href="/basket/" className="flex-1 py-[14px] text-center">View basket</Link>
                 <a href={`${process.env.NEXT_PUBLIC_WP_URL}/checkout/`} className="flex-1 py-[14px] text-center">Checkout</a>
               </div>
             </>

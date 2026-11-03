@@ -10,7 +10,7 @@ export default function PageHeaderBar({
   breadcrumbs: { label: string; href?: string }[];
 }) {
   return (
-    <div className="bg-[#fcfcfc]">
+    <div className="bg-[#fcfcfc] border-b border-[#e1e1e1]">
       <div className="mx-auto flex max-w-[1310px] flex-wrap items-center justify-between gap-2 px-4 py-[10px] sm:px-[50px]">
         <h1 className="font-[family-name:var(--f-head)] text-[16px] leading-[36px] font-bold text-[#666666]">
           {title}

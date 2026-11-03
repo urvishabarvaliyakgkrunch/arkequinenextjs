@@ -10,20 +10,21 @@ import { formatMoney, type StoreApiCart, type StoreApiCartItem } from "@/lib/sto
 // #E1E1E1 borders, measured live via computed styles.
 export default function CartTable({ cart }: { cart: StoreApiCart }) {
   return (
-    <table className="w-full border-collapse text-[13px]">
+    <table className="w-full border-collapse border border-ark-border text-[13px]">
       <thead>
         <tr>
-          <th className="border-b border-ark-border p-[9px_12px] text-left text-[12px] font-bold text-ark-btn-text uppercase"></th>
-          <th className="border-b border-ark-border p-[9px_12px] text-left text-[12px] font-bold text-ark-btn-text uppercase">
+          <th className="w-[5.4%] border border-ark-border p-[9px_12px]"></th>
+          <th className="w-[7.1%] border border-ark-border p-[9px_12px]"></th>
+          <th className="w-[21.2%] border border-ark-border p-[9px_12px] text-left text-[12px] font-bold tracking-[1.5px] text-ark-btn-text uppercase">
             Product
           </th>
-          <th className="border-b border-ark-border p-[9px_12px] text-left text-[12px] font-bold text-ark-btn-text uppercase">
+          <th className="w-[35%] border border-ark-border p-[9px_12px] text-left text-[12px] font-bold tracking-[1.5px] text-ark-btn-text uppercase">
             Price
           </th>
-          <th className="border-b border-ark-border p-[9px_12px] text-left text-[12px] font-bold text-ark-btn-text uppercase">
+          <th className="w-[19.3%] border border-ark-border p-[9px_12px] text-left text-[12px] font-bold tracking-[1.5px] text-ark-btn-text uppercase">
             Quantity
           </th>
-          <th className="border-b border-ark-border p-[9px_12px] text-left text-[12px] font-bold text-ark-btn-text uppercase">
+          <th className="border border-ark-border p-[9px_12px] text-left text-[12px] font-bold tracking-[1.5px] text-ark-btn-text uppercase">
             Subtotal
           </th>
         </tr>
@@ -45,41 +46,45 @@ function CartRow({ item }: { item: StoreApiCartItem }) {
 
   return (
     <tr className={isPending ? "opacity-50" : ""}>
-      <td className="border-b border-ark-border p-[6px_5px] align-middle">
+      <td className="border border-ark-border p-[6px_12px] align-middle">
         <button
           type="button"
           onClick={() => removeItem(item.key)}
           aria-label={`Remove ${item.name} from basket`}
-          className="cursor-pointer text-[16px] leading-none text-ark-btn-text hover:text-ark-price"
+          className="flex size-[18px] cursor-pointer items-center justify-center rounded-full border border-ark-border bg-ark-price text-[14px] leading-none text-white"
         >
           ×
         </button>
       </td>
-      <td className="border-b border-ark-border p-[6px_5px] align-middle">
-        <Link href={item.permalink} className="flex items-center gap-3">
-          {item.images[0] ? (
+      <td className="border border-ark-border p-[6px_12px] align-middle">
+        {item.images[0] ? (
+          <Link href={item.permalink}>
             <Image
               src={item.images[0].thumbnail}
               alt={item.images[0].alt || item.name}
-              width={64}
-              height={64}
-              className="h-16 w-16 object-cover"
+              width={32}
+              height={32}
+              className="h-8 w-8 object-cover"
             />
-          ) : null}
-          <span className="text-ark-price">{item.name}</span>
+          </Link>
+        ) : null}
+      </td>
+      <td className="border border-ark-border p-[6px_12px] align-middle">
+        <Link href={item.permalink} className="text-ark-price">
+          {item.name}
         </Link>
       </td>
-      <td className="border-b border-ark-border p-[6px_5px] align-middle">
+      <td className="border border-ark-border p-[6px_12px] align-middle">
         <SubscriptionPriceOptions item={item} />
       </td>
-      <td className="border-b border-ark-border p-[6px_5px] align-middle">
-        <div className="flex">
+      <td className="border border-ark-border p-[6px_12px] align-middle">
+        <div className="mx-auto flex w-[130px]">
           <button
             type="button"
             onClick={() => updateQuantity(item.key, Math.max(item.quantity_limits.minimum, item.quantity - 1))}
             disabled={isPending}
             aria-label="Decrease quantity"
-            className="size-[43px] cursor-pointer bg-bg-qty text-[13px] text-ark-btn-text"
+            className="size-[43px] cursor-pointer bg-bg-qty text-[13px] text-[#919191] border border-[#E1E1E1]"
           >
             -
           </button>
@@ -91,20 +96,20 @@ function CartRow({ item }: { item: StoreApiCartItem }) {
             onChange={(e) => updateQuantity(item.key, Math.max(1, Number(e.target.value) || 1))}
             disabled={isPending}
             aria-label="Product quantity"
-            className="size-[43px] border-x border-ark-border bg-white text-center text-[13px] text-ark-btn-text [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+            className="size-[43px] border-x border-ark-border bg-white px-[5px] text-center text-[13px] text-[#919191] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none border border-r-0 border-l-0 border-[#E1E1E1]"
           />
           <button
             type="button"
             onClick={() => updateQuantity(item.key, Math.min(item.quantity_limits.maximum, item.quantity + 1))}
             disabled={isPending}
             aria-label="Increase quantity"
-            className="size-[43px] cursor-pointer bg-bg-qty text-[13px] text-ark-btn-text"
+            className="size-[43px] cursor-pointer bg-bg-qty text-[13px] text-[#919191] border border-[#E1E1E1]"
           >
             +
           </button>
         </div>
       </td>
-      <td className="border-b border-ark-border p-[6px_5px] align-middle font-semibold text-ark-price">
+      <td className="border border-ark-border p-[6px_12px] align-middle font-semibold text-ark-price">
         {formatMoney(item.totals.line_subtotal, item.totals)}
       </td>
     </tr>
@@ -132,38 +137,46 @@ function SubscriptionPriceOptions({ item }: { item: StoreApiCartItem }) {
   const discountedLabel = `${item.prices.currency_symbol}${discounted}`;
 
   return (
-    <fieldset className="flex flex-col gap-1">
+    <fieldset>
       <legend className="sr-only">Purchase option for {item.name}</legend>
-      <label className="flex items-center gap-2">
-        <input
-          type="radio"
-          name={`plan-${item.key}`}
-          checked={selected === "one_time"}
-          onChange={() => setPlan(item.key,"one_time")}
-          className="accent-ark-price"
-        />
-        {oneTimeLabel}
-      </label>
-      <label className="flex items-center gap-2 text-ark-btn-text">
-        <input
-          type="radio"
-          name={`plan-${item.key}`}
-          checked={selected === "monthly"}
-          onChange={() => setPlan(item.key,"monthly")}
-          className="accent-ark-price"
-        />
-        {discountedLabel} / month
-      </label>
-      <label className="flex items-center gap-2 text-ark-btn-text">
-        <input
-          type="radio"
-          name={`plan-${item.key}`}
-          checked={selected === "every_3_months"}
-          onChange={() => setPlan(item.key,"every_3_months")}
-          className="accent-ark-price"
-        />
-        {discountedLabel} every 3 months
-      </label>
+      <ul>
+      <li className="p-[3px_0] leading-[28.05px]">
+        <label className="flex items-center">
+          <input
+            type="radio"
+            name={`plan-${item.key}`}
+            checked={selected === "one_time"}
+            onChange={() => setPlan(item.key, "one_time")}
+            className="m-0 h-[13px] w-[100px]"
+          />
+          <span className="text-[13px]">{oneTimeLabel}</span>
+        </label>
+      </li>
+      <li className="p-[3px_0] leading-[28.05px]">
+        <label className="flex items-center">
+          <input
+            type="radio"
+            name={`plan-${item.key}`}
+            checked={selected === "monthly"}
+            onChange={() => setPlan(item.key, "monthly")}
+            className="m-0 h-[13px] w-[100px]"
+          />
+          <span className="text-[13px] font-bold">{discountedLabel} / month</span>
+        </label>
+      </li>
+      <li className="p-[3px_0] leading-[28.05px]">
+        <label className="flex items-center">
+          <input
+            type="radio"
+            name={`plan-${item.key}`}
+            checked={selected === "every_3_months"}
+            onChange={() => setPlan(item.key, "every_3_months")}
+            className="m-0 h-[13px] w-[100px]"
+          />
+          <span className="text-[13px] font-bold">{discountedLabel} every 3 months</span>
+        </label>
+      </li>
+      </ul>
     </fieldset>
   );
 }

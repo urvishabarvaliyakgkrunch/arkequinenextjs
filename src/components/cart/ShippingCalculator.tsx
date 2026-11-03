@@ -81,9 +81,10 @@ export default function ShippingCalculator({ cart }: { cart: StoreApiCart }) {
 
   if (!hasAddress && !open) {
     return (
-      <div className="text-[12px] text-ark-btn-text">
-        Enter your address to view shipping options.{" "}
-        <button type="button" onClick={() => setOpen(true)} className="cursor-pointer text-ark-price underline">
+      <div className="text-[13px] leading-[28px] text-[#919191]">
+        Enter your address to view shipping options.
+        <br />
+        <button type="button" onClick={() => setOpen(true)} className="cursor-pointer text-[13px] leading-[16px] text-ark-price">
           Calculate shipping
         </button>
       </div>

@@ -77,3 +77,29 @@ body {
   font-family: var(--f-body);
 }
 
+
+/* Landing redesign tokens (from the enfold-child landing template) */
+@theme inline {
+  --color-teal: #00a8ad;
+  --color-teal-deep: #007f83;
+  --color-teal-tint: rgba(0, 168, 173, 0.08);
+  --color-graphite: #58595b;
+  --color-graphite-deep: #3f4042;
+  --color-grey: #e6e7e8;
+  --color-grey-soft: #f4f4f5;
+  --font-serif-lt: var(--font-millar-landing), Georgia, serif;
+  --ease-lt: cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+
+@keyframes rise {
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes cue {
+  0% { top: -36px; }
+  60%, 100% { top: 36px; }
+}
+

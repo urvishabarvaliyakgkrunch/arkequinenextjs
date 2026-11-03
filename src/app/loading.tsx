@@ -1,6 +1,6 @@
 // src/app/loading.tsx
-import HomeSkeleton from "@/components/home/HomeSkeleton";
+import LandingHomeSkeleton from "@/components/landing/LandingHomeSkeleton";
 
 export default function Loading() {
-  return <HomeSkeleton />;
+  return <LandingHomeSkeleton />;
 }

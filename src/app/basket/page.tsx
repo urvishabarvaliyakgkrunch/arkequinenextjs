@@ -28,16 +28,22 @@ export default function CartPage() {
   return (
     <>
       <PageHeaderBar title="Basket" breadcrumbs={[{ label: "Home", href: "/" }, { label: "Basket" }]} />
-      <main className="mx-auto max-w-[1210px] px-4 py-[25px]">
+      <main className="mx-auto max-w-[1210px] px-10 py-[25px] min-[1290px]:px-0">
         {!hasMounted ? (
           <Skeleton className="h-[300px] w-full" />
         ) : isEmpty ? (
-          <p className="text-[14px] text-ark-btn-text">
-            Your basket is currently empty.{" "}
-            <Link href="/shop" className="text-ark-price underline">
+          // Matches live .cart-empty.woocommerce-info box + .button.wc-backward (measured via computed styles)
+          <>
+            <div className="mb-5 rounded-[2px] border border-ark-border bg-white p-[19px] text-[17px] leading-[28px] text-ark-btn-text">
+              Your basket is currently empty.
+            </div>
+            <Link
+              href="/shop"
+              className="mt-1 inline-block rounded-[2px] bg-ark-price p-[15px] text-[12px] leading-[12px] text-white"
+            >
               Return to shop
             </Link>
-          </p>
+          </>
         ) : (
           <div className="flex flex-col gap-8">
             <div>

@@ -41,20 +41,20 @@ export default function CartCouponRow() {
   }
 
   return (
-    <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
-      <div className="flex flex-wrap gap-2">
+    <div className="-mt-px mb-6 flex flex-wrap items-start justify-between gap-3 border border-ark-border p-[10px_12px]">
+      <div className="flex flex-wrap">
         <input
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value)}
           placeholder="Coupon code"
-          className="h-[41px] border border-ark-border px-[11px] text-[12px] text-ark-btn-text"
+          className="m-[3px_3px_3px_0] h-[41px] w-[200px] border border-ark-border px-[11px] text-[12px] text-ark-btn-text"
         />
         <button
           type="button"
           onClick={handleApply}
           disabled={applying}
-          className="h-[42px] cursor-pointer bg-ark-price px-4 text-[12px] font-semibold text-white disabled:cursor-wait disabled:opacity-60"
+          className="m-[3px_0] h-[42px] w-[200px] cursor-pointer rounded-[2px] bg-ark-price text-[12px] text-white disabled:cursor-wait disabled:opacity-60"
         >
           Apply coupon
         </button>
@@ -64,7 +64,7 @@ export default function CartCouponRow() {
         type="button"
         onClick={() => applyPlans()}
         disabled={!hasPendingPlanChange || applyingPlans}
-        className="h-[42px] cursor-pointer bg-ark-price px-4 text-[12px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+        className="m-[3px_0] h-[42px] w-[182px] cursor-pointer rounded-[2px] bg-ark-price px-[15px] text-[12px] text-white disabled:cursor-not-allowed disabled:opacity-50"
       >
         {applyingPlans ? "Updating…" : "Update basket"}
       </button>
