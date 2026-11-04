@@ -4,6 +4,8 @@ export interface AuthUser {
   databaseId: number;
   name: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface LoginResult {
