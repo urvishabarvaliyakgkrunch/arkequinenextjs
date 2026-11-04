@@ -68,10 +68,10 @@ export default function LandingHeader() {
 
   return (
     <>
-      <header ref={header} style={{ ["--menu-top" as string]: `${menuTop}px` }} className={`sticky top-0 right-0 left-0 z-[100] bg-white font-sans leading-[1.6] text-graphite transition-[padding] duration-[400ms] ease-lt ${scrolled ? "py-3 shadow-[0_2px_16px_-8px_rgba(0,0,0,0.18)]" : "py-[18px] shadow-[0_1px_0_#e6e7e8]"}`}>
+      <header ref={header} style={{ ["--menu-top" as string]: `${menuTop}px` }} className={`sticky top-0 right-0 left-0 z-[100] bg-white font-sans leading-[1.6] text-graphite py-[18px] ${scrolled ? "shadow-[0_2px_16px_-8px_rgba(0,0,0,0.18)]" : "shadow-[0_1px_0_#e6e7e8]"}`}>
         <div className="mx-auto flex w-full max-w-[1240px] items-center justify-between gap-6 px-8 max-[1024px]:gap-[6px] max-[900px]:gap-2">
           <Link href="/" aria-label="ARK Equine home" className="shrink-0">
-            <Image src={SITE.logo} alt="ARK Equine" width={150} height={60} unoptimized priority className={`h-auto transition-[width] duration-[400ms] ease-lt max-[1100px]:max-w-[100px] ${scrolled ? "w-[128px]" : "w-[150px]"}`} />
+            <Image src={SITE.logo} alt="ARK Equine" width={150} height={60} unoptimized priority className="h-auto w-[150px] max-[1100px]:max-w-[100px]" />
           </Link>
 
           <div

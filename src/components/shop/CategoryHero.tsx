@@ -5,6 +5,7 @@ import Image from "next/image";
 // no overlay or title text (the banner artwork already carries the brand's own logo).
 export default function CategoryHero({
   image,
+  title
 }: {
   title: string;
   image: { sourceUrl: string; altText: string | null } | null;
@@ -12,8 +13,16 @@ export default function CategoryHero({
   if (!image) return null;
 
   return (
-    <div className="relative aspect-[1900/450] w-full overflow-hidden">
-      <Image src={image.sourceUrl} alt={image.altText ?? ""} fill priority sizes="100vw" className="object-cover" />
+    <div
+      className="relative h-[350px] w-full overflow-hidden flex justify-center items-center"
+      style={{
+        backgroundImage: `url(${image.sourceUrl})`,
+        backgroundSize: "contain",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat"
+      }}
+    >
+      <h1 className="font-[family-name:var(--font-heading)] uppercase text-[34px] font-bold text-white md:text-[34px]">{title}</h1>
     </div>
   );
 }

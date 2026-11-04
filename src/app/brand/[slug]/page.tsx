@@ -1,11 +1,13 @@
 // src/app/brand/[slug]/page.tsx
 // Brand archive pages (e.g. /brand/arkequine-brand/) — same URL shape and layout as the live site:
-// header bar + full-width banner (the brand's feature image) + product grid, no sidebar/toolbar.
+// header bar + contained brand banner + sort/per-page toolbar + product grid + categories/education sidebar.
 import { notFound } from "next/navigation";
 import { getBrandPageData, getBrandSlugs } from "@/lib/queries/brand";
-import ProductGrid from "@/components/shop/ProductGrid";
+import CategoryListing from "@/components/shop/CategoryListing";
+import ProductCategoriesSidebar from "@/components/shop/ProductCategoriesSidebar";
+import EducationArticles from "@/components/shop/EducationArticles";
 import PageHeaderBar from "@/components/shop/PageHeaderBar";
-import CategoryHero from "@/components/shop/CategoryHero";
+import BrandBanner from "@/components/shop/BrandBanner";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -22,17 +24,28 @@ export default async function BrandSlugPage({ params }: { params: Promise<{ slug
     notFound();
   }
 
-  const { name, image, products } = brand;
+  const { name, image, products, categorySlug, categories, tags } = brand;
 
   return (
     <>
       <PageHeaderBar title={name} breadcrumbs={[{ label: "Home", href: "/" }, { label: name }]} />
-      <CategoryHero title={name} image={image} />
-      <main className="mx-auto max-w-[1210px] px-4 pt-[26px] pb-8 min-[1242px]:px-0">
-        <ProductGrid
-          products={products}
-          columnsClassName="grid-cols-1 gap-[12.09px] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-        />
+      <BrandBanner image={image} />
+      <main className="mx-auto flex max-w-[1210px] flex-col gap-8 px-4 py-[25px] lg:flex-row lg:gap-12">
+        <div className="min-w-0 flex-1">
+          {categorySlug ? (
+            <CategoryListing slug={categorySlug} initialProducts={products} />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {products.length === 0 ? (
+                <p className="col-span-full py-12 text-center text-ark-btn-text">No products found.</p>
+              ) : null}
+            </div>
+          )}
+        </div>
+        <div className="w-full lg:w-[325px] lg:shrink-0">
+          <ProductCategoriesSidebar categories={categories} activeSlug={categorySlug ?? undefined} />
+          <EducationArticles tags={tags} />
+        </div>
       </main>
     </>
   );

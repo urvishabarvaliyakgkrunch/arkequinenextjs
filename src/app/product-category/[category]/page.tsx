@@ -35,21 +35,21 @@ export default async function ProductCategoryPage({ params }: { params: Promise<
           { label: data.productCategory.name },
         ]}
       />
-      <main className="mx-auto flex max-w-[1210px] flex-col gap-8 px-4 py-[25px] lg:flex-row lg:gap-12">
-        <div className="min-w-0 flex-1">
+      <div className="flex max-w-[1310px] flex-col mx-auto gap-8 lg:flex-row lg:gap-0 px-4 sm:px-[50px]">
+        <div className="min-w-0 flex-1 lg:pr-[50px] py-[50px]">
           {description && (
             <div className="mb-[10px] text-left text-[12px] leading-[28.05px] text-[#57585a]">{description}</div>
           )}
           <CategoryListing slug={data.productCategory.slug} initialProducts={data.productCategory.products.nodes} />
         </div>
-        <div className="w-full lg:w-[325px] lg:shrink-0">
+        <div className="w-full pt-8 lg:w-[327px] lg:shrink-0 lg:border-l lg:border-border lg:pl-[50px] pb-[30px] sm:pb-[50px]">
           <ProductCategoriesSidebar
             categories={data.productCategories?.nodes ?? []}
             activeSlug={data.productCategory.slug}
           />
           <EducationArticles tags={data.tags?.nodes ?? []} />
         </div>
-      </main>
+      </div>
     </>
   );
 }

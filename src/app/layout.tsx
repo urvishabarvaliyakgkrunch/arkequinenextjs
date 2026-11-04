@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Lato } from "next/font/google";
 import localFont from "next/font/local";
 import LandingHeader from "@/components/landing/LandingHeader";
-import LandingFooter from "@/components/landing/LandingFooter";
+import SiteFooter from "@/components/layout/SiteFooter";
 import CartToast from "@/components/cart/CartToast";
 import "./globals.css";
 
@@ -43,7 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <LandingHeader />
         <main className="flex-1">{children}</main>
-        <LandingFooter />
+        <SiteFooter />
         <CartToast />
       </body>
     </html>

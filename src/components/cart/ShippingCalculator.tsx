@@ -108,7 +108,7 @@ export default function ShippingCalculator({ cart }: { cart: StoreApiCart }) {
                     name="shipping-rate"
                     checked={rate.selected}
                     onChange={() => selectShippingRate(rate.rate_id)}
-                    className="mt-[3px] accent-ark-price"
+                    className="mt-[3px]"
                   />
                   <span>
                     <span className="font-semibold text-ark-title">

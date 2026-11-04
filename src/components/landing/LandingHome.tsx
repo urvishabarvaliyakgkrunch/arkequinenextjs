@@ -9,7 +9,6 @@ import LandingPano from "@/components/landing/LandingPano";
 import LandingPet from "@/components/landing/LandingPet";
 import LandingArticles from "@/components/landing/LandingArticles";
 import LandingSubscribe from "@/components/landing/LandingSubscribe";
-import LandingPartners from "@/components/landing/LandingPartners";
 import type { BestSellerProduct } from "@/lib/queries/home";
 
 export default function LandingHome({ bestSellers }: { bestSellers: BestSellerProduct[] }) {
@@ -25,7 +24,6 @@ export default function LandingHome({ bestSellers }: { bestSellers: BestSellerPr
       <LandingPet />
       <LandingArticles />
       <LandingSubscribe />
-      <LandingPartners />
     </div>
   );
 }

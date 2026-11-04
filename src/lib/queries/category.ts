@@ -15,7 +15,7 @@ const GET_CATEGORY_PRODUCTS = `
       slug
       description
       image {
-        sourceUrl(size: ENTRY_WITH_SIDEBAR)
+        sourceUrl(size: LARGE)
         altText
       }
       products(first: $first, where: { typeIn: [SIMPLE, VARIABLE], orderby: $orderby }) {

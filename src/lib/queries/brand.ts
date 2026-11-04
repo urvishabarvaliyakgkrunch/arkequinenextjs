@@ -6,7 +6,7 @@
 // product grid itself still comes from the normal GraphQL category query (full price/stock data).
 import { gql } from "@/lib/graphql";
 import { getCategoryPageData } from "@/lib/queries/category";
-import type { ProductCardFields } from "@/types/product";
+import type { ProductCardFields, ProductCategorySummary, PostTag } from "@/types/product";
 
 const WP_BASE_URL = `${process.env.NEXT_PUBLIC_WP_GRAPHQL_URL}`.replace(/\/graphql\/?$/, "");
 
@@ -91,6 +91,10 @@ export interface BrandPageData {
   description: string;
   image: { sourceUrl: string; altText: string | null } | null;
   products: ProductCardFields[];
+  // The matching WooCommerce category's own slug — CategoryListing's sort/per-page API route keys off this.
+  categorySlug: string | null;
+  categories: ProductCategorySummary[];
+  tags: PostTag[];
 }
 
 export async function getBrandPageData(slug: string): Promise<BrandPageData | null> {
@@ -102,15 +106,16 @@ export async function getBrandPageData(slug: string): Promise<BrandPageData | nu
     findMatchingCategorySlug(term.name, slug),
   ]);
 
-  const products = categorySlug
-    ? (await getCategoryPageData(categorySlug, { first: 100 })).productCategory?.products.nodes ?? []
-    : [];
+  const categoryData = categorySlug ? await getCategoryPageData(categorySlug, { first: 100 }) : null;
 
   return {
     name: term.name,
     slug: term.slug,
     description: term.description,
     image,
-    products,
+    products: categoryData?.productCategory?.products.nodes ?? [],
+    categorySlug,
+    categories: categoryData?.productCategories.nodes ?? [],
+    tags: categoryData?.tags.nodes ?? [],
   };
 }

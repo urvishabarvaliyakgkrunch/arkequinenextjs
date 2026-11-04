@@ -19,12 +19,12 @@ export default async function ShopPage() {
       <PageHeaderBar title="Shop" breadcrumbs={[{ label: "Home", href: "/" }, { label: "Shop" }]} />
       {/* Icon band is full-bleed (its own bg spans the viewport); product grid sits in the normal container */}
       <CategoryGrid categories={SHOP_CATEGORIES} perRow={6} />
-      <main className="mx-auto max-w-[1210px] px-4 pt-[26px] pb-8 min-[1242px]:px-0">
+      <div className="mx-auto max-w-[1210px] px-4 pt-[26px] pb-8 min-[1242px]:px-0">
         <ProductGrid
           products={data.products.nodes}
           columnsClassName="grid-cols-1 gap-[12.09px] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         />
-      </main>
+      </div>
     </>
   );
 }
