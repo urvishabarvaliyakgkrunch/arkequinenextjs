@@ -45,6 +45,29 @@ function persistCount(count: number) {
   localStorage.setItem(LAST_COUNT_KEY, String(count));
 }
 
+// The real GET /api/cart round trip is ~3s (backend latency, see PROJECT-CONTEXT.md) — on every page
+// load that meant /basket sat on its skeleton for that whole 3s, every single time, even though the
+// cart rarely changed between visits. Caching the last-seen cart snapshot lets the page render the
+// real table immediately from cache while hydrate() quietly confirms/corrects it in the background —
+// same pattern as the header badge's lastKnownCount, just for the whole cart object.
+const LAST_CART_KEY = "wc_cart_last_snapshot";
+
+function readLastCart(): StoreApiCart | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(LAST_CART_KEY);
+    return raw ? (JSON.parse(raw) as StoreApiCart) : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistCart(cart: StoreApiCart | null) {
+  if (typeof window === "undefined") return;
+  if (cart) localStorage.setItem(LAST_CART_KEY, JSON.stringify(cart));
+  else localStorage.removeItem(LAST_CART_KEY);
+}
+
 interface CartState {
   cart: StoreApiCart | null;
   lastKnownCount: number;
@@ -82,8 +105,30 @@ export function getConfirmedPlan(
 // One cart read at a time: header icon and cart page both hydrate on mount, they share the same request
 let hydrating: Promise<void> | null = null;
 
+// Rapid-fire add/remove clicks (e.g. 5-6 "Add to basket" clicks on the shop grid) used to fire their
+// Store API calls concurrently — whichever response landed last fully overwrote `cart`, so an item
+// added earlier could vanish if its own request happened to resolve after a later one. The optimistic
+// local update already made every click feel instant, so there's no UI cost to running the *real*
+// network calls strictly one-at-a-time in click order instead — this queue does that.
+let mutationQueue: Promise<unknown> = Promise.resolve();
+function enqueueMutation<T>(task: () => Promise<T>): Promise<T> {
+  const run = mutationQueue.then(task, task);
+  mutationQueue = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
+
+// Bumped by every optimistic local change (add/update/remove). hydrate() is a passive background
+// resync — if it started before the user's click and its response lands after, applying it blindly
+// would stomp the optimistic state with pre-click data (the badge would flicker back down, an item
+// would "come back"). hydrate() snapshots this at call time and skips applying its result if a mutation
+// has started since — that mutation's own response (already queued) is the current truth instead.
+let cartVersion = 0;
+
 export const useCartStore = create<CartState>((set, get) => ({
-  cart: null,
+  cart: readLastCart(),
   lastKnownCount: readLastCount(),
   pendingId: null,
   justAddedId: null,
@@ -94,9 +139,17 @@ export const useCartStore = create<CartState>((set, get) => ({
   applyingPlans: false,
 
   hydrate: () => {
-    hydrating ??= getCart()
+    const versionAtStart = cartVersion;
+    // Also goes through the mutation queue — otherwise a hydrate() fired while an add/remove is still
+    // in flight (e.g. a page navigation right after a click) could land first with a stale snapshot
+    // and overwrite the in-progress optimistic/real update.
+    hydrating ??= enqueueMutation(getCart)
       .then((cart) => {
+        // A mutation started after this hydrate began — its own (queued, more current) response will
+        // land next; applying this older snapshot now would just stomp it straight back out.
+        if (cartVersion !== versionAtStart) return;
         persistCount(cart.items_count);
+        persistCart(cart);
         set({ cart, lastKnownCount: cart.items_count });
       })
       .finally(() => {
@@ -105,64 +158,167 @@ export const useCartStore = create<CartState>((set, get) => ({
     return hydrating;
   },
 
+  // Optimistic: the real backend add-item round trip is ~3s (see PROJECT-CONTEXT.md), so the badge
+  // count/toast/checkmark/mini-cart row update instantly here and the real request runs in the
+  // background. Only revert (count + toast + mini-cart row) if the backend actually rejects it.
   addItem: async (id, name, image, quantity = 1) => {
-    set({ pendingId: id });
+    const prevCart = get().cart;
+    const prevCount = get().lastKnownCount;
+    const optimisticCount = prevCount + quantity;
+    // Already in the cart (same product, no variation picked here): bump its existing row's quantity
+    // in place instead of appending a second "new" row that only merges away once the real response
+    // lands — that's what made it look like a duplicate flashed up then turned into a qty update.
+    const existing = prevCart?.items.find((i) => i.id === id && !i.key.startsWith("optimistic-"));
+    // We don't have the real Store API price yet (only the GraphQL-side name/image), so a brand-new
+    // mini-cart row shows this item with a placeholder price until the real response replaces it — see
+    // CartIcon.tsx, which special-cases this key prefix to show "Adding…" instead of formatMoney() on a fake "0".
+    const optimisticItem: StoreApiCart["items"][number] = {
+      key: `optimistic-${id}`,
+      id,
+      quantity,
+      quantity_limits: { minimum: 1, maximum: 99 },
+      name,
+      permalink: "",
+      images: [{ thumbnail: image ?? "", alt: name }],
+      variation: [],
+      item_data: [],
+      prices: { currency_minor_unit: 2, currency_symbol: "", price: "0" },
+      totals: { currency_minor_unit: 2, currency_symbol: "", line_subtotal: "0" },
+    };
+    const optimisticCart = prevCart
+      ? {
+          ...prevCart,
+          items: existing
+            ? prevCart.items.map((i) => (i === existing ? { ...i, quantity: i.quantity + quantity } : i))
+            : [...prevCart.items, optimisticItem],
+          items_count: optimisticCount,
+        }
+      : prevCart;
+    const versionAtStart = ++cartVersion;
+    persistCount(optimisticCount);
+    persistCart(optimisticCart);
+    set({
+      cart: optimisticCart,
+      lastKnownCount: optimisticCount,
+      pendingId: null,
+      lastAdded: { name, image },
+      justAddedId: id,
+    });
+    // Checkmark badge over the product image fades back out on its own, like the live site's.
+    setTimeout(() => {
+      set((s) => (s.justAddedId === id ? { justAddedId: null } : {}));
+    }, 1500);
     try {
-      const cart = await apiAddToCart(id, quantity);
+      const cart = await enqueueMutation(() => apiAddToCart(id, quantity));
       persistCount(cart.items_count);
-      set({ cart, lastKnownCount: cart.items_count, pendingId: null, lastAdded: { name, image }, justAddedId: id });
-      // Checkmark badge over the product image fades back out on its own, like the live site's.
-      setTimeout(() => {
-        set((s) => (s.justAddedId === id ? { justAddedId: null } : {}));
-      }, 1500);
+      persistCart(cart);
+      set({ cart, lastKnownCount: cart.items_count });
     } catch (err) {
-      set({ pendingId: null });
+      // Only revert to the pre-click snapshot if nothing else has changed the cart since — otherwise
+      // this would stomp a later, unrelated optimistic change (another item added/removed meanwhile).
+      // If something else did change, a hydrate() resync (not a local guess) is what should fix it.
+      if (cartVersion === versionAtStart) {
+        persistCount(prevCount);
+        persistCart(prevCart);
+        set((s) => ({
+          cart: prevCart,
+          lastKnownCount: prevCount,
+          justAddedId: s.justAddedId === id ? null : s.justAddedId,
+          lastAdded: null,
+        }));
+      }
       throw err;
     }
   },
 
+  // Optimistic: patch the item/count in local state immediately so the basket table doesn't sit on
+  // a ~3s spinner for a quantity bump, then reconcile with the real Store API response in the background.
   updateQuantity: async (key, quantity) => {
-    set({ pendingKey: key });
+    const prevCart = get().cart;
+    if (!prevCart) return;
+    const prevItem = prevCart.items.find((i) => i.key === key);
+    if (!prevItem) return;
+    const delta = quantity - prevItem.quantity;
+    const optimisticCart: StoreApiCart = {
+      ...prevCart,
+      items: prevCart.items.map((i) => (i.key === key ? { ...i, quantity } : i)),
+      items_count: prevCart.items_count + delta,
+    };
+    const versionAtStart = ++cartVersion;
+    persistCount(optimisticCart.items_count);
+    persistCart(optimisticCart);
+    set({ cart: optimisticCart, lastKnownCount: optimisticCart.items_count, pendingKey: null });
     try {
-      const cart = await apiUpdateItemQuantity(key, quantity);
+      const cart = await enqueueMutation(() => apiUpdateItemQuantity(key, quantity));
       persistCount(cart.items_count);
+      persistCart(cart);
       // A direct +/- quantity edit invalidates any staged/confirmed plan for this item — let it
       // fall back to being derived from the new real quantity instead of lying about the plan.
       set((s) => {
         const { [key]: _selected, ...selectedPlans } = s.selectedPlans;
         const { [key]: _confirmed, ...confirmedPlans } = s.confirmedPlans;
-        return { cart, lastKnownCount: cart.items_count, pendingKey: null, selectedPlans, confirmedPlans };
+        return { cart, lastKnownCount: cart.items_count, selectedPlans, confirmedPlans };
       });
     } catch (err) {
-      set({ pendingKey: null });
+      // See addItem's catch: don't stomp a later, unrelated optimistic change with this stale snapshot.
+      if (cartVersion === versionAtStart) {
+        persistCount(prevCart.items_count);
+        persistCart(prevCart);
+        set({ cart: prevCart, lastKnownCount: prevCart.items_count });
+      }
       throw err;
     }
   },
 
   removeItem: async (key) => {
-    set({ pendingKey: key });
+    const prevCart = get().cart;
+    if (!prevCart) return;
+    const removed = prevCart.items.find((i) => i.key === key);
+    // A second click on the same "×" before React re-renders (it's not disabled mid-removal) would
+    // otherwise fire another real remove-item call for a key that's already gone from the optimistic
+    // cart — the Store API answers that with a 409 Conflict, and the resulting catch-block revert is
+    // what made removal look like it "didn't work". Already-removed key: nothing left to do.
+    if (!removed) return;
+    const optimisticCart: StoreApiCart = {
+      ...prevCart,
+      items: prevCart.items.filter((i) => i.key !== key),
+      items_count: prevCart.items_count - (removed?.quantity ?? 0),
+    };
+    const versionAtStart = ++cartVersion;
+    persistCount(optimisticCart.items_count);
+    persistCart(optimisticCart);
+    set({ cart: optimisticCart, lastKnownCount: optimisticCart.items_count, pendingKey: null });
     try {
-      const cart = await apiRemoveItem(key);
+      const cart = await enqueueMutation(() => apiRemoveItem(key));
       persistCount(cart.items_count);
-      set({ cart, lastKnownCount: cart.items_count, pendingKey: null });
+      persistCart(cart);
+      set({ cart, lastKnownCount: cart.items_count });
     } catch (err) {
-      set({ pendingKey: null });
+      // See addItem's catch: don't stomp a later, unrelated optimistic change with this stale snapshot.
+      if (cartVersion === versionAtStart) {
+        persistCount(prevCart.items_count);
+        persistCart(prevCart);
+        set({ cart: prevCart, lastKnownCount: prevCart.items_count });
+      }
       throw err;
     }
   },
 
   applyCoupon: async (code) => {
-    const cart = await apiApplyCoupon(code);
+    const cart = await enqueueMutation(() => apiApplyCoupon(code));
+    persistCart(cart);
     set({ cart });
   },
 
   updateShippingAddress: async (address) => {
-    const cart = await apiUpdateShippingAddress(address);
+    const cart = await enqueueMutation(() => apiUpdateShippingAddress(address));
+    persistCart(cart);
     set({ cart });
   },
 
   selectShippingRate: async (rateId, packageId = 0) => {
-    const cart = await apiSelectShippingRate(rateId, packageId);
+    const cart = await enqueueMutation(() => apiSelectShippingRate(rateId, packageId));
+    persistCart(cart);
     set({ cart });
   },
 
@@ -187,10 +343,11 @@ export const useCartStore = create<CartState>((set, get) => ({
         const plan = selectedPlans[item.key];
         const quantity = planToQuantity(plan);
         if (quantity !== item.quantity) {
-          updatedCart = await apiUpdateItemQuantity(item.key, quantity);
+          updatedCart = await enqueueMutation(() => apiUpdateItemQuantity(item.key, quantity));
         }
         nextConfirmed[item.key] = plan;
       }
+      persistCart(updatedCart);
       set({ cart: updatedCart, confirmedPlans: nextConfirmed, applyingPlans: false });
     } catch (err) {
       set({ applyingPlans: false });

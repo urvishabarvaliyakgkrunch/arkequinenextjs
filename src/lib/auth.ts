@@ -1,4 +1,5 @@
 // src/lib/auth.ts
+import { cache } from "react";
 import type { AuthUser, LoginResult } from "@/types/auth";
 
 const WP_GRAPHQL_URL = `${process.env.NEXT_PUBLIC_WP_GRAPHQL_URL}`;
@@ -25,6 +26,8 @@ const VIEWER_QUERY = `
       databaseId
       name
       email
+      firstName
+      lastName
     }
   }
 `;
@@ -58,23 +61,54 @@ export async function loginWithPassword(username: string, password: string): Pro
   return json.data.login as LoginResult;
 }
 
-// Used server-side on /my-account to decide login form vs dashboard. A bad/expired token
-// just means "not logged in" — never throw, the page falls back to showing the login form.
-export async function getCurrentUser(authToken: string): Promise<AuthUser | null> {
-  const res = await fetch(WP_GRAPHQL_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${authToken}`,
-    },
-    body: JSON.stringify({ query: VIEWER_QUERY }),
-    cache: "no-store",
-  });
+export class SessionCheckFailedError extends Error {
+  constructor(cause: string) {
+    super(`Couldn't verify the session: ${cause}`);
+    this.name = "SessionCheckFailedError";
+  }
+}
 
-  const json = await res.json();
-  if (json.errors || !json.data?.viewer) {
+// Used server-side on /my-account to decide login form vs dashboard.
+// Wrapped in React's cache() because the layout and page both call this with the same token in the
+// same request — without it, that's two full ~3s GraphQL round trips back-to-back (the "no-store"
+// fetch option opts out of Next.js's own fetch memoization, so cache() is needed on top of it).
+export const getCurrentUser = cache(async (authToken: string): Promise<AuthUser | null> => {
+  let res: Response;
+  try {
+    res = await fetch(WP_GRAPHQL_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ query: VIEWER_QUERY }),
+      cache: "no-store",
+    });
+  } catch {
+    throw new SessionCheckFailedError("network request failed");
+  }
+
+  if (!res.ok) {
+    throw new SessionCheckFailedError(`backend returned ${res.status}`);
+  }
+
+  let json: { errors?: Array<{ message?: string }>; data?: { viewer?: AuthUser } };
+  try {
+    json = await res.json();
+  } catch {
+    throw new SessionCheckFailedError("backend returned a non-JSON response");
+  }
+
+  // The backend's JWT auth plugin gives a generic "Internal server error" for a bad/expired
+  // token on this query too (same pattern as loginWithPassword's bad-credentials case above) —
+  // there's no reliable signal in the message to tell "invalid token" apart from any other
+  // app-level GraphQL error. A 200 response that still carries a GraphQL error is a completed
+  // round trip, not a dropped/flaky one, so treat it as "really logged out" rather than
+  // transient. Only an actual transport-level failure (network error, non-2xx, bad JSON —
+  // caught above) counts as transient now.
+  if (json.errors?.length) {
     return null;
   }
 
-  return json.data.viewer as AuthUser;
-}
+  return json.data?.viewer ?? null;
+});

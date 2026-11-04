@@ -15,20 +15,27 @@ import { useCartStore } from "@/store/cart";
 export default function CartPage() {
   const cart = useCartStore((s) => s.cart);
   const hydrate = useCartStore((s) => s.hydrate);
-  // The header's basket icon hydrates the same store on every page, so by the time someone clicks
-  // through to /basket the cart is usually already loaded — show it right away instead of flashing
-  // a skeleton over data we already have. Only a genuinely first load (cart still null) waits.
-  const [hasMounted, setHasMounted] = useState(cart !== null);
+  // Must start false on both server and client — SSR has no localStorage so the server-rendered HTML
+  // always shows the skeleton, and starting the client state any other way would be a hydration
+  // mismatch. The cart store itself is pre-filled from a cached last-known snapshot (see cart.ts's
+  // readLastCart/persistCart) though, so the real win happens in the effect below: it flips this true
+  // immediately from that cache, not after waiting on hydrate()'s ~3s backend round trip.
+  const [hasMounted, setHasMounted] = useState(false);
   // A failed fetch (network down, backend unreachable) must not look like "cart is empty" — those
   // are different facts and the empty-state copy/CTA ("Return to shop") is actively wrong for a
   // fetch failure, since the basket might not be empty at all, we just couldn't ask.
   const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
+    // Cached cart from a previous visit — show it immediately, then let hydrate() quietly confirm/
+    // correct it in the background instead of sitting on the skeleton for a fetch that's likely to
+    // come back with the same data anyway.
+    if (cart !== null) setHasMounted(true);
     hydrate()
       .then(() => setLoadError(false))
       .catch(() => setLoadError(true))
       .finally(() => setHasMounted(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only run once on mount, not on every cart change
   }, [hydrate]);
 
   const isEmpty = hasMounted && !loadError && (!cart || cart.items.length === 0);

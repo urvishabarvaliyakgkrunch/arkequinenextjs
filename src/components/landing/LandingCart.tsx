@@ -1,26 +1,52 @@
 // src/components/landing/LandingCart.tsx
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { formatMoney } from "@/lib/storeApi";
 import { useCartStore } from "@/store/cart";
 
 // Same cart store as the add-to-cart buttons, so the badge and mini-cart stay in sync on every page
 export default function LandingCart() {
   const cart = useCartStore((s) => s.cart);
+  const lastKnownCount = useCartStore((s) => s.lastKnownCount);
   const hydrate = useCartStore((s) => s.hydrate);
+  // `cart` is now pre-filled on the client from a cached last-known snapshot (see cart.ts's
+  // readLastCart) so the basket page can skip its loading skeleton — but SSR has no localStorage, so
+  // the server-rendered HTML never has that cache and `cart` is always null there. The badge's own
+  // number is handled below with suppressHydrationWarning (a safe one-level text mismatch), but the
+  // hover dropdown's item list is a structural branch (empty-state vs real list) that needs its first
+  // client render to actually match the server's empty-cart output — hence gating it on `mounted` and
+  // only swapping in the cached items after that first paint.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     hydrate().catch(() => {});
   }, [hydrate]);
 
-  const items = cart?.items ?? [];
-  const count = cart?.items_count ?? 0;
+  // The dropdown opens on plain CSS :hover — clicking "View basket" navigates client-side without the
+  // mouse actually moving, so the cursor is still sitting over the same spot on the new page and the
+  // CSS :hover never turns off. Force it shut on every route change instead.
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  useEffect(() => setOpen(false), [pathname]);
+
+  const items = mounted ? (cart?.items ?? []) : [];
+  // lastKnownCount (not cart.items_count) — it's kept in step with every optimistic cart change, and
+  // was already safe to read on the very first client render even before the cache-on-init change.
+  const count = lastKnownCount;
   const subtotal = cart ? formatMoney(cart.totals.total_price, cart.totals) : "";
 
   return (
-    <div className="group relative">
+    <div
+      className="group relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={() => setOpen(false)}
+    >
       <Link
         href="/basket/"
         aria-label="Cart"
@@ -31,11 +57,26 @@ export default function LandingCart() {
           <line x1="3" y1="6" x2="21" y2="6" />
           <path d="M16 10a4 4 0 0 1-8 0" />
         </svg>
-        <span className="-mt-5 -ml-[2px] h-[18px] w-[18px] rounded-full bg-teal text-center text-[10px] leading-[18px] text-white">{count}</span>
+        {/* Server always renders 0 (no localStorage during SSR); the client legitimately shows the
+            cached count instead. Deliberately NOT using suppressHydrationWarning here — that freezes
+            the DOM at the server's stale "0" until some other state change triggers a real re-render,
+            defeating the whole point of showing the cached count instantly. Leaving the mismatch
+            unsuppressed lets React's own hydration-mismatch recovery redraw this subtree with the
+            correct client value right away — the cost is a harmless dev-console-only error, not a
+            user-visible one (same tradeoff as the extension-caused hydration noise in gotcha #6). */}
+        <span className="-mt-5 -ml-[2px] h-[18px] w-[18px] rounded-full bg-teal text-center text-[10px] leading-[18px] text-white">
+          {count}
+        </span>
       </Link>
-      <div className="invisible absolute top-full right-0 z-[300] w-[280px] pt-2 opacity-0 transition-opacity duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 max-[900px]:hidden">
+      <div
+        className={`absolute top-full right-0 z-[300] w-[280px] pt-2 transition-opacity duration-200 max-[900px]:hidden ${
+          open ? "visible opacity-100" : "invisible opacity-0"
+        }`}
+      >
         <div className="rounded-[2px] border border-border bg-white text-left shadow-[0_10px_15px_rgba(0,0,0,0.1)]">
-          {count === 0 ? (
+          {/* items.length (not count) — items is forced to [] until `mounted`, so this branch choice
+              matches the server's empty-cart render on the very first client paint too. */}
+          {items.length === 0 ? (
             <p className="p-[10px] text-[11px] leading-[18px] text-muted">No products in the basket.</p>
           ) : (
             <>
@@ -45,7 +86,13 @@ export default function LandingCart() {
                     <div className="min-w-0">
                       <Link href="/basket/" className="block text-[12px] leading-[18px] font-bold text-ink-dark">{item.name}</Link>
                       <span className="block text-[12px] leading-[18px] text-muted">
-                        {item.quantity} × {formatMoney(item.prices.price, item.prices)}
+                        {/* Optimistic row (cart.ts addItem) has no real Store API price yet — it's a
+                            placeholder "0" until the real response replaces this item, a couple
+                            seconds later. Showing that as "€0.00" read as a price glitch, not a loading
+                            state, so show a transient label instead until the real price lands. */}
+                        {item.key.startsWith("optimistic-")
+                          ? `${item.quantity} × …`
+                          : `${item.quantity} × ${formatMoney(item.prices.price, item.prices)}`}
                       </span>
                     </div>
                     <span className="h-[55px] w-[55px] shrink-0 border border-border bg-white">
@@ -62,8 +109,8 @@ export default function LandingCart() {
                 <strong className="text-ink-dark">Subtotal:</strong> {subtotal}
               </p>
               <div className="flex bg-[#e1e1e1] text-[13px] font-bold text-ink-dark">
-                <Link href="/basket/" className="flex-1 py-[14px] text-center">View basket</Link>
-                <a href={`${process.env.NEXT_PUBLIC_WP_URL}/checkout/`} className="flex-1 py-[14px] text-center">Checkout</a>
+                <Link href="/basket/" onClick={() => setOpen(false)} className="flex-1 py-[14px] text-center">View basket</Link>
+                <a href={`${process.env.NEXT_PUBLIC_WP_URL}/checkout/`} onClick={() => setOpen(false)} className="flex-1 py-[14px] text-center">Checkout</a>
               </div>
             </>
           )}

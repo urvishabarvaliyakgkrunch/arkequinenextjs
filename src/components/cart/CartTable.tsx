@@ -49,7 +49,7 @@ function CartRow({ item }: { item: StoreApiCartItem }) {
       <td className="border border-ark-border p-[6px_12px] align-middle">
         <button
           type="button"
-          onClick={() => removeItem(item.key)}
+          onClick={() => removeItem(item.key).catch(() => {})}
           aria-label={`Remove ${item.name} from basket`}
           className="flex size-[18px] cursor-pointer items-center justify-center rounded-full border border-ark-border bg-ark-price text-[14px] leading-none text-white"
         >
@@ -92,7 +92,7 @@ function CartRow({ item }: { item: StoreApiCartItem }) {
         <div className="mx-auto flex w-[130px]">
           <button
             type="button"
-            onClick={() => updateQuantity(item.key, Math.max(item.quantity_limits.minimum, item.quantity - 1))}
+            onClick={() => updateQuantity(item.key, Math.max(item.quantity_limits.minimum, item.quantity - 1)).catch(() => {})}
             disabled={isPending}
             aria-label="Decrease quantity"
             className="size-[43px] cursor-pointer bg-bg-qty text-[13px] text-[#919191] border border-[#E1E1E1]"
@@ -104,14 +104,14 @@ function CartRow({ item }: { item: StoreApiCartItem }) {
             min={item.quantity_limits.minimum}
             max={item.quantity_limits.maximum}
             value={item.quantity}
-            onChange={(e) => updateQuantity(item.key, Math.max(1, Number(e.target.value) || 1))}
+            onChange={(e) => updateQuantity(item.key, Math.max(1, Number(e.target.value) || 1)).catch(() => {})}
             disabled={isPending}
             aria-label="Product quantity"
             className="size-[43px] border-x border-ark-border bg-white px-[5px] text-center text-[13px] text-[#919191] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none border border-r-0 border-l-0 border-[#E1E1E1]"
           />
           <button
             type="button"
-            onClick={() => updateQuantity(item.key, Math.min(item.quantity_limits.maximum, item.quantity + 1))}
+            onClick={() => updateQuantity(item.key, Math.min(item.quantity_limits.maximum, item.quantity + 1)).catch(() => {})}
             disabled={isPending}
             aria-label="Increase quantity"
             className="size-[43px] cursor-pointer bg-bg-qty text-[13px] text-[#919191] border border-[#E1E1E1]"
