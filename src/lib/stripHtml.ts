@@ -10,3 +10,10 @@ export function stripHtml(html: string | null | undefined): string {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+// Caps a plain-text description to N words, ellipsis only when something was actually cut.
+export function truncateWords(text: string, maxWords: number): string {
+  const words = text.split(" ");
+  if (words.length <= maxWords) return text;
+  return words.slice(0, maxWords).join(" ") + "…";
+}

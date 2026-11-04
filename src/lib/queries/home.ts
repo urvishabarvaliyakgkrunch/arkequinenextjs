@@ -61,7 +61,8 @@ export async function getBestSellers(): Promise<BestSellerProduct[]> {
       {},
       { revalidate: 3600, tags: [PRODUCTS_TAG] },
     );
-    return data.productCategory?.products.nodes ?? [];
+    const nodes = data.productCategory?.products.nodes ?? [];
+    return [...nodes].sort((a, b) => a.name.localeCompare(b.name));
   } catch {
     return [];
   }

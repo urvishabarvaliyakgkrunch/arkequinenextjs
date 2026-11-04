@@ -5,7 +5,7 @@ import SectionTitle from "@/components/landing/SectionTitle";
 import Reveal from "@/components/landing/Reveal";
 import BestCarousel from "@/components/landing/BestCarousel";
 import { BEST } from "@/components/landing/landingData";
-import { stripHtml } from "@/lib/stripHtml";
+import { stripHtml, truncateWords } from "@/lib/stripHtml";
 import type { BestSellerProduct } from "@/lib/queries/home";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 
@@ -48,9 +48,15 @@ export default function LandingBest({ products }: { products: BestSellerProduct[
             <Link href={`/product/${p.slug}`}>
               <h3 className="mb-[7px] font-serif-lt text-[22px] leading-[1.1] font-normal text-graphite">{p.name}</h3>
             </Link>
-            <p className="mb-5 flex-1 text-[12.5px] leading-[1.5] text-[#9a9b9d]">{stripHtml(p.shortDescription)}</p>
-            <div className="flex items-center justify-between gap-[10px]">
-              <Price value={splitPrice(p.price)} cls="text-graphite" />
+            <p className="mb-5 flex-1 text-[12.5px] leading-[1.5] text-[#9a9b9d]">{truncateWords(stripHtml(p.shortDescription), 12)}</p>
+            <div className="flex items-start justify-between gap-[10px]">
+              <div className="flex flex-col gap-[3px]">
+                <Price value={splitPrice(p.price)} cls="text-graphite" />
+                {/* Guest-facing default from the live site's subscription plugin (WCSATT) — matches shop page's ProductCard */}
+                <span className="text-[11px] text-[#9a9b9d]">
+                  — or subscribe to save <span className="font-semibold text-graphite">10%</span>
+                </span>
+              </div>
               {p.__typename === "SimpleProduct" ? (
                 <AddToCartButton
                   productId={p.databaseId}
@@ -80,9 +86,14 @@ export default function LandingBest({ products }: { products: BestSellerProduct[
           <div className="flex flex-1 flex-col px-6 pt-[22px] pb-6">
             <span className="mb-2 text-[10px] font-bold tracking-[0.14em] text-[#a7a8aa] uppercase">{c.cat}</span>
             <h3 className="mb-[7px] font-serif-lt text-[22px] leading-[1.1] font-normal text-graphite">{c.name}</h3>
-            <p className="mb-5 flex-1 text-[12.5px] leading-[1.5] text-[#9a9b9d]">{c.desc}</p>
-            <div className="flex items-center justify-between gap-[10px]">
-              <Price value={c.price} cls="text-graphite" />
+            <p className="mb-5 flex-1 text-[12.5px] leading-[1.5] text-[#9a9b9d]">{truncateWords(c.desc, 12)}</p>
+            <div className="flex items-start justify-between gap-[10px]">
+              <div className="flex flex-col gap-[3px]">
+                <Price value={c.price} cls="text-graphite" />
+                <span className="text-[11px] text-[#9a9b9d]">
+                  — or subscribe to save <span className="font-semibold text-graphite">10%</span>
+                </span>
+              </div>
               <button type="button" aria-label={`Add ${c.name}`} className={ROUND_ADD}>+</button>
             </div>
           </div>
@@ -97,7 +108,9 @@ export default function LandingBest({ products }: { products: BestSellerProduct[
           <div>
             <div className="mb-4 text-[10px] font-bold tracking-[0.2em] text-[#7fd8d2] uppercase">Editor&apos;s choice</div>
             <h3 className="mb-[14px] font-serif-lt text-[36px] leading-[1.02] font-light tracking-[-0.01em]">{hero ? hero.name : BEST.hero.name}</h3>
-            <p className="mb-5 max-w-[250px] text-[13px] leading-[1.55] opacity-85">{hero ? stripHtml(hero.shortDescription) : BEST.hero.text}</p>
+            <p className="mb-5 max-w-[250px] text-[13px] leading-[1.55] opacity-85">
+              {hero ? truncateWords(stripHtml(hero.shortDescription), 16) : BEST.hero.text}
+            </p>
           </div>
           <div className="mt-1 mb-5 self-center max-[900px]:m-0">
             {hero?.image ? (
@@ -106,11 +119,16 @@ export default function LandingBest({ products }: { products: BestSellerProduct[
               <Image src={BEST.hero.image} alt={BEST.hero.name} width={190} height={190} className="max-h-[190px] w-auto drop-shadow-[0_16px_26px_rgba(0,0,0,0.4)]" />
             )}
           </div>
-          <div className="flex items-center justify-between border-t border-white/[0.18] pt-[18px]">
-            <span className="flex items-baseline gap-[5px]">
-              <span className="text-[13px] font-bold">€</span>
-              <span className="font-serif-lt text-[28px] font-normal">{hero ? splitPrice(hero.price) : BEST.hero.price}</span>
-            </span>
+          <div className="flex items-start justify-between border-t border-white/[0.18] pt-[18px]">
+            <div className="flex flex-col gap-[3px]">
+              <span className="flex items-baseline gap-[5px]">
+                <span className="text-[13px] font-bold">€</span>
+                <span className="font-serif-lt text-[28px] font-normal">{hero ? splitPrice(hero.price) : BEST.hero.price}</span>
+              </span>
+              <span className="text-[11px] opacity-70">
+                — or subscribe to save <span className="font-semibold">10%</span>
+              </span>
+            </div>
             {hero && hero.__typename === "SimpleProduct" ? (
               <AddToCartButton
                 productId={hero.databaseId}
