@@ -82,7 +82,7 @@ export const TRUST = [
 
 export const DUAL = [
   { image: "Equine-Health-1-copy.webp", eyebrow: "For horses & ponies", title: "Equine Health", text: "Trusted equine nutrition for health, performance and everyday wellbeing.", cta: "Explore equine", href: "/shop/" },
-  { image: "pet-health.jpg", eyebrow: "For dogs & cats", title: "Pet Health", text: "Targeted nutritional support for happier, healthier pets", cta: "Explore pets", href: "/pets/" },
+  { image: "pet-health.jpg", eyebrow: "For dogs & cats", title: "Pet Health", text: "Targeted nutritional support for happier, healthier pets", cta: "Explore pets", href: "/pet/" },
 ];
 
 export interface ShopCategory { image: string; title: string; text: string; href: string }

@@ -15,13 +15,17 @@ export default function TagPostCard({ post }: { post: TagPostSummary }) {
   return (
     <article>
       {post.featuredImage ? (
-        <Link href={post.uri} title={post.title} className="mb-[6px] block overflow-hidden rounded-[3px] bg-white">
+        <Link
+          href={post.uri}
+          title={post.title}
+          className="relative mb-[6px] block aspect-[495/400] w-full overflow-hidden rounded-[3px] bg-white"
+        >
           <Image
             src={post.featuredImage.node.sourceUrl}
             alt={post.featuredImage.node.altText || post.title}
-            width={170}
-            height={137}
-            className="block h-auto w-full"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover"
           />
         </Link>
       ) : null}
