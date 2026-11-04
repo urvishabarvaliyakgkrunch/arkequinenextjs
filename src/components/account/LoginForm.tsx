@@ -59,7 +59,7 @@ export default function LoginForm() {
         return;
       }
 
-      router.push("/");
+      router.push("/my-account");
       router.refresh();
     } catch {
       setFormError("Could not reach the server. Please try again.");

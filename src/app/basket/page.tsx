@@ -19,14 +19,19 @@ export default function CartPage() {
   // through to /basket the cart is usually already loaded — show it right away instead of flashing
   // a skeleton over data we already have. Only a genuinely first load (cart still null) waits.
   const [hasMounted, setHasMounted] = useState(cart !== null);
+  // A failed fetch (network down, backend unreachable) must not look like "cart is empty" — those
+  // are different facts and the empty-state copy/CTA ("Return to shop") is actively wrong for a
+  // fetch failure, since the basket might not be empty at all, we just couldn't ask.
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     hydrate()
-      .catch(() => {})
+      .then(() => setLoadError(false))
+      .catch(() => setLoadError(true))
       .finally(() => setHasMounted(true));
   }, [hydrate]);
 
-  const isEmpty = hasMounted && (!cart || cart.items.length === 0);
+  const isEmpty = hasMounted && !loadError && (!cart || cart.items.length === 0);
 
   return (
     <>
@@ -34,6 +39,24 @@ export default function CartPage() {
       <main className="mx-auto max-w-[1210px] px-10 py-[25px] min-[1290px]:px-0">
         {!hasMounted ? (
           <CartPageSkeleton />
+        ) : loadError ? (
+          <div className="mb-5 rounded-[2px] border border-ark-border bg-white p-[19px] text-[17px] leading-[28px] text-ark-btn-text">
+            Couldn&apos;t load your basket. Check your connection and{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setHasMounted(false);
+                hydrate()
+                  .then(() => setLoadError(false))
+                  .catch(() => setLoadError(true))
+                  .finally(() => setHasMounted(true));
+              }}
+              className="cursor-pointer text-ark-price underline"
+            >
+              try again
+            </button>
+            .
+          </div>
         ) : isEmpty ? (
           // Matches live .cart-empty.woocommerce-info box + .button.wc-backward (measured via computed styles)
           <>

@@ -1,5 +1,5 @@
 // src/lib/auth.ts
-import type { LoginResult } from "@/types/auth";
+import type { AuthUser, LoginResult } from "@/types/auth";
 
 const WP_GRAPHQL_URL = `${process.env.NEXT_PUBLIC_WP_GRAPHQL_URL}`;
 
@@ -14,6 +14,17 @@ const LOGIN_MUTATION = `
         name
         email
       }
+    }
+  }
+`;
+
+const VIEWER_QUERY = `
+  query ArkViewer {
+    viewer {
+      id
+      databaseId
+      name
+      email
     }
   }
 `;
@@ -41,10 +52,29 @@ export async function loginWithPassword(username: string, password: string): Pro
   // credentials rather than a clean validation error — treat any GraphQL error here
   // as invalid credentials rather than surfacing the raw backend message to the user.
   if (json.errors || !json.data?.login) {
-    // TEMP DEBUG — remove after diagnosing the backend error
-    console.error("GraphQL login error:", JSON.stringify(json.errors ?? json));
     throw new InvalidCredentialsError();
   }
 
   return json.data.login as LoginResult;
+}
+
+// Used server-side on /my-account to decide login form vs dashboard. A bad/expired token
+// just means "not logged in" — never throw, the page falls back to showing the login form.
+export async function getCurrentUser(authToken: string): Promise<AuthUser | null> {
+  const res = await fetch(WP_GRAPHQL_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({ query: VIEWER_QUERY }),
+    cache: "no-store",
+  });
+
+  const json = await res.json();
+  if (json.errors || !json.data?.viewer) {
+    return null;
+  }
+
+  return json.data.viewer as AuthUser;
 }

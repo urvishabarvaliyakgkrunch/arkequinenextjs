@@ -100,7 +100,7 @@ function saveSession(res: Response) {
   if (cartToken) localStorage.setItem(CART_TOKEN_KEY, cartToken);
 }
 
-async function storeFetch(path: string, options: RequestInit = {}): Promise<StoreApiCart> {
+async function storeFetchOnce(path: string, options: RequestInit): Promise<Response> {
   const { nonce, cartToken } = readSession();
   const res = await fetch(`${STORE_API}${path}`, {
     ...options,
@@ -112,6 +112,19 @@ async function storeFetch(path: string, options: RequestInit = {}): Promise<Stor
     },
   });
   saveSession(res);
+  return res;
+}
+
+// A cached nonce can go stale (session expired, cart recreated server-side) and the Store API
+// answers with a 403 rather than issuing a fresh one — retry exactly once with a brand new nonce
+// instead of surfacing a 403 to the user for something that's really just a stale local token.
+async function storeFetch(path: string, options: RequestInit = {}): Promise<StoreApiCart> {
+  let res = await storeFetchOnce(path, options);
+  if (res.status === 403) {
+    localStorage.removeItem(NONCE_KEY);
+    await getCart();
+    res = await storeFetchOnce(path, options);
+  }
   if (!res.ok) throw new Error(`Store API ${path} failed: ${res.status}`);
   return res.json();
 }
