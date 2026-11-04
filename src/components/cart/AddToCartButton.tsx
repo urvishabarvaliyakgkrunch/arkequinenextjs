@@ -10,6 +10,9 @@ export default function AddToCartButton({
   image,
   quantity = 1,
   className = "flex flex-1 cursor-pointer items-center justify-center gap-1 text-center",
+  // "Adding…" works for a text button, but blows out a fixed-size round icon button (e.g. the
+  // "+" quick-add circles) — pass a spinner or other compact indicator for those instead.
+  pendingContent = "Adding…",
   children,
 }: {
   productId: number;
@@ -17,6 +20,7 @@ export default function AddToCartButton({
   image?: string;
   quantity?: number;
   className?: string;
+  pendingContent?: ReactNode;
   children: ReactNode;
 }) {
   const addItem = useCartStore((s) => s.addItem);
@@ -33,7 +37,7 @@ export default function AddToCartButton({
       }}
       className={`${className} disabled:cursor-wait`}
     >
-      {isPending ? "Adding…" : children}
+      {isPending ? pendingContent : children}
     </button>
   );
 }

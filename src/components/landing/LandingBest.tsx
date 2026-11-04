@@ -52,7 +52,13 @@ export default function LandingBest({ products }: { products: BestSellerProduct[
             <div className="flex items-center justify-between gap-[10px]">
               <Price value={splitPrice(p.price)} cls="text-graphite" />
               {p.__typename === "SimpleProduct" ? (
-                <AddToCartButton productId={p.databaseId} name={p.name} image={p.image?.sourceUrl} className={ROUND_ADD}>
+                <AddToCartButton
+                  productId={p.databaseId}
+                  name={p.name}
+                  image={p.image?.sourceUrl}
+                  className={ROUND_ADD}
+                  pendingContent={<span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+                >
                   +
                 </AddToCartButton>
               ) : (
