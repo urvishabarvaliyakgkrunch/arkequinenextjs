@@ -17,3 +17,13 @@ export function getOrderStatusLabel(status: string): string {
   const slug = status.replace(/^wc-/, "").toLowerCase();
   return STATUS_LABELS[slug] ?? status;
 }
+
+export type ReceiptState = "paid" | "pending" | "failed";
+
+// Only say "paid" when WooCommerce says so; the Stripe webhook can arrive a few seconds late
+export function getReceiptState(status: string): ReceiptState {
+  const slug = status.replace(/^wc-/, "").toLowerCase();
+  if (slug === "processing" || slug === "completed") return "paid";
+  if (slug === "failed" || slug === "cancelled") return "failed";
+  return "pending";
+}

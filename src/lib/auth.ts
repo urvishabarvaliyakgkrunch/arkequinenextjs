@@ -112,3 +112,26 @@ export const getCurrentUser = cache(async (authToken: string): Promise<AuthUser 
 
   return json.data?.viewer ?? null;
 });
+
+const REFRESH_MUTATION = `
+  mutation ArkRefreshToken($refreshToken: String!) {
+    refreshJwtAuthToken(input: { jwtRefreshToken: $refreshToken }) {
+      authToken
+    }
+  }
+`;
+
+// The authToken only lives a few minutes; the refresh token buys a new one without asking for the password again.
+// Returns null when the refresh token is bad or expired, so the caller can carry on as a guest.
+export async function refreshAuthToken(refreshToken: string): Promise<string | null> {
+  const res = await fetch(WP_GRAPHQL_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query: REFRESH_MUTATION, variables: { refreshToken } }),
+    cache: "no-store",
+  });
+
+  const json = await res.json().catch(() => null);
+  const token = json?.data?.refreshJwtAuthToken?.authToken;
+  return typeof token === "string" ? token : null;
+}

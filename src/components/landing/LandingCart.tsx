@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { formatMoney } from "@/lib/storeApi";
+import CheckoutLink from "@/components/cart/CheckoutLink";
 import { useCartStore } from "@/store/cart";
 
 // Same cart store as the add-to-cart buttons, so the badge and mini-cart stay in sync on every page
@@ -110,7 +111,7 @@ export default function LandingCart() {
               </p>
               <div className="flex bg-[#e1e1e1] text-[13px] font-bold text-ink-dark">
                 <Link href="/basket/" onClick={() => setOpen(false)} className="flex-1 py-[14px] text-center">View basket</Link>
-                <a href={`${process.env.NEXT_PUBLIC_WP_URL}/checkout/`} onClick={() => setOpen(false)} className="flex-1 py-[14px] text-center">Checkout</a>
+                <CheckoutLink onClick={() => setOpen(false)} className="flex-1 py-[14px] text-center">Checkout</CheckoutLink>
               </div>
             </>
           )}

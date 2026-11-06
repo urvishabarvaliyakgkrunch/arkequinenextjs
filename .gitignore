@@ -43,3 +43,7 @@ next-env.d.ts
 # Internal working docs (clauderules §0.3) — never committed
 PROJECT-CONTEXT.md
 PERFORMANCE-REPORT.md
+CHECKOUT-CONTEXT.md
+
+# Backend WordPress plugin for the checkout handoff (internal hand-off, not part of the Next.js app)
+backend-plugin/

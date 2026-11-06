@@ -1,6 +1,7 @@
 // src/components/cart/CartTotals.tsx
 import { formatMoney, type StoreApiCart } from "@/lib/storeApi";
 import ShippingCalculator from "@/components/cart/ShippingCalculator";
+import CheckoutLink from "@/components/cart/CheckoutLink";
 
 // Matches ark-equine.com/basket/'s .cart_totals box — 14px uppercase Millar heading, teal buttons,
 // measured live via computed styles.
@@ -47,12 +48,9 @@ export default function CartTotals({ cart }: { cart: StoreApiCart }) {
         </tbody>
       </table>
 
-      <a
-        href={`${process.env.NEXT_PUBLIC_WP_URL}/checkout/`}
-        className="mt-[14px] inline-block min-w-[193px] rounded-[2px] bg-ark-price p-[15px] text-center text-[15.64px] text-white"
-      >
+      <CheckoutLink className="mt-[14px] inline-block min-w-[193px] rounded-[2px] bg-ark-price p-[15px] text-center text-[15.64px] text-white">
         Proceed to checkout
-      </a>
+      </CheckoutLink>
     </aside>
   );
 }

@@ -172,3 +172,8 @@ export async function selectShippingRate(rateId: string, packageId = 0): Promise
     body: JSON.stringify({ package_id: packageId, rate_id: rateId }),
   });
 }
+
+// The Cart-Token is how WordPress finds this browser's cart at checkout. Browser-only (localStorage).
+export function getCartToken(): string | null {
+  return readSession().cartToken;
+}
