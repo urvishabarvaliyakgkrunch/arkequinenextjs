@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCartStore, getConfirmedPlan, type SubscriptionPlan } from "@/store/cart";
 import { formatMoney, type StoreApiCart, type StoreApiCartItem } from "@/lib/storeApi";
-import { formatEuro, subscriptionDiscountedPrice, discountedLineTotalMinor } from "@/lib/subscriptionPricing";
+import { formatEuro, subscriptionDiscountedPrice } from "@/lib/subscriptionPricing";
 
 // Matches ark-equine.com/basket/'s table.shop_table — 13px body text, uppercase bold 12px headers,
 // #E1E1E1 borders, measured live via computed styles.
@@ -147,15 +147,12 @@ function CartRow({ item }: { item: StoreApiCartItem }) {
   );
 }
 
-// Store API's own line_subtotal is always full-price × quantity (it has no idea a plan was picked) —
-// recompute from the confirmed plan so a "monthly"/"every_3_months" row shows the discounted total,
-// same as the live site's basket (e.g. Bone Protect at qty 1 monthly shows €75.60, not €84.00).
+// WCSATT (backend) now applies the real plan discount before the Store API response is built —
+// line_subtotal is already the correct charged amount for a monthly/every_3_months item, so it's
+// shown as-is. Don't re-apply a client-side % here: that would double-discount an already-discounted
+// backend price (see scratch-ark-subscription-plan-backend-snippet.php).
 function ItemSubtotal({ item }: { item: StoreApiCartItem }) {
-  const confirmedPlans = useCartStore((s) => s.confirmedPlans);
-  const plan = getConfirmedPlan(confirmedPlans, item.key, item.quantity);
-  if (plan === "one_time") return <>{formatMoney(item.totals.line_subtotal, item.totals)}</>;
-  const lineMinor = discountedLineTotalMinor(Number(item.prices.price), item.quantity, plan);
-  return <>{formatMoney(String(lineMinor), item.prices)}</>;
+  return <>{formatMoney(item.totals.line_subtotal, item.totals)}</>;
 }
 
 // Live site's subscribe-and-save radios (WooCommerce Subscriptions/WCSATT). That plugin's real
@@ -173,8 +170,12 @@ function SubscriptionPriceOptions({ item }: { item: StoreApiCartItem }) {
     useCartStore((s) => s.selectedPlans[item.key]) ??
     getConfirmedPlan(confirmedPlans, item.key, item.quantity);
 
-  const oneTimeLabel = formatMoney(item.prices.price, item.prices);
-  // Store API's item price is already the per-unit amount in minor units — reuse the same
+  // Base every hypothetical option on the product's true regular price, not item.prices.price —
+  // that field is already plan-adjusted (e.g. a monthly line's `price` is already the 10%-off
+  // amount), so using it here double-discounted the two subscribe options for any line that
+  // wasn't already "Buy Now" (10% off of 75.60 instead of 10% off of 84.00).
+  const oneTimeLabel = formatMoney(item.prices.regular_price, item.prices);
+  // Store API's regular price is already the per-unit amount in minor units — reuse the same
   // one-source-of-truth helper the product page uses so the % and rounding never drift apart.
   const discountedLabel = formatEuro(subscriptionDiscountedPrice(oneTimeLabel));
 

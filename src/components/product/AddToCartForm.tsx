@@ -1,11 +1,23 @@
 // src/components/product/AddToCartForm.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useCartStore, planToQuantity, type SubscriptionPlan } from "@/store/cart";
 import { subscriptionDiscountedPrice, formatEuro, GUEST_SUBSCRIPTION_DISCOUNT_PERCENT } from "@/lib/subscriptionPricing";
 import EnquiryButton from "@/components/product/EnquiryButton";
 import type { ProductPageData } from "@/types/product";
+
+// Matches the live site's own WCSATT query param naming exactly: "0" for Buy Now (full price),
+// "1_month" / "3_month" for the two Deliver: options — e.g. ark-equine.com/product/bone-protect/?convert_to_sub_215=1_month
+function convertToSubParamName(productId: number): string {
+  return `convert_to_sub_${productId}`;
+}
+
+function convertToSubValue(purchaseType: "buy_now" | "subscribe", deliverPlan: "monthly" | "every_3_months"): string {
+  if (purchaseType === "buy_now") return "0";
+  return deliverPlan === "every_3_months" ? "3_month" : "1_month";
+}
 
 // Quantity box and button; adds through the shared cart store, so the header basket and toast update too.
 //
@@ -20,6 +32,34 @@ export default function AddToCartForm({ product }: { product: ProductPageData })
   const [purchaseType, setPurchaseType] = useState<"buy_now" | "subscribe">("subscribe");
   const [deliverPlan, setDeliverPlan] = useState<Extract<SubscriptionPlan, "monthly" | "every_3_months">>("monthly");
   const addItem = useCartStore((s) => s.addItem);
+  const router = useRouter();
+  const pathname = usePathname();
+  // Only push to the URL once the shopper actually picks something — otherwise the very first render
+  // (before the deep-link read effect below runs) would immediately overwrite a URL someone shared.
+  const userPickedRef = useRef(false);
+
+  // Deep-link support: a visitor arriving via a shared "?convert_to_sub_215=3_month" link lands on
+  // that option pre-selected, matching the live site. Read-only — deliberately not done via a lazy
+  // useState initializer (would read window.location during the very first render and disagree with
+  // the server-rendered default, a hydration mismatch like the one just fixed in LandingCart.tsx).
+  useEffect(() => {
+    const raw = new URLSearchParams(window.location.search).get(convertToSubParamName(product.databaseId));
+    if (raw === "0") setPurchaseType("buy_now");
+    else if (raw === "3_month") {
+      setPurchaseType("subscribe");
+      setDeliverPlan("every_3_months");
+    } else if (raw === "1_month") {
+      setPurchaseType("subscribe");
+      setDeliverPlan("monthly");
+    }
+  }, [product.databaseId]);
+
+  // Keep the URL in sync with whatever the shopper picks, same as the live site's own behavior.
+  useEffect(() => {
+    if (!userPickedRef.current) return;
+    const value = convertToSubValue(purchaseType, deliverPlan);
+    router.replace(`${pathname}?${convertToSubParamName(product.databaseId)}=${value}`, { scroll: false });
+  }, [purchaseType, deliverPlan, pathname, product.databaseId, router]);
 
   const isVariable = product.type === "VariableProduct";
 
@@ -78,7 +118,10 @@ export default function AddToCartForm({ product }: { product: ProductPageData })
           type="radio"
           name="purchase-type"
           checked={purchaseType === "buy_now"}
-          onChange={() => setPurchaseType("buy_now")}
+          onChange={() => {
+            userPickedRef.current = true;
+            setPurchaseType("buy_now");
+          }}
         />
         Buy Now
       </label>
@@ -87,7 +130,10 @@ export default function AddToCartForm({ product }: { product: ProductPageData })
           type="radio"
           name="purchase-type"
           checked={purchaseType === "subscribe"}
-          onChange={() => setPurchaseType("subscribe")}
+          onChange={() => {
+            userPickedRef.current = true;
+            setPurchaseType("subscribe");
+          }}
         />
         Subscribe to save {GUEST_SUBSCRIPTION_DISCOUNT_PERCENT}%
       </label>
@@ -97,7 +143,10 @@ export default function AddToCartForm({ product }: { product: ProductPageData })
           <p className="mb-[6px] text-[13px] font-semibold text-secondary">Deliver:</p>
           <select
             value={deliverPlan}
-            onChange={(e) => setDeliverPlan(e.target.value as typeof deliverPlan)}
+            onChange={(e) => {
+              userPickedRef.current = true;
+              setDeliverPlan(e.target.value as typeof deliverPlan);
+            }}
             className="h-[43px] w-full border border-[#e1e1e1] bg-white px-[10px] text-[14px] text-meta"
           >
             <option value="monthly">

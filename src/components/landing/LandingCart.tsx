@@ -5,15 +5,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { formatMoney } from "@/lib/storeApi";
-import { useCartStore, getConfirmedPlan } from "@/store/cart";
-import { discountedLineTotalMinor } from "@/lib/subscriptionPricing";
+import { useCartStore } from "@/store/cart";
 
 // Same cart store as the add-to-cart buttons, so the badge and mini-cart stay in sync on every page
 export default function LandingCart() {
   const cart = useCartStore((s) => s.cart);
   const lastKnownCount = useCartStore((s) => s.lastKnownCount);
   const hydrate = useCartStore((s) => s.hydrateIfActive);
-  const confirmedPlans = useCartStore((s) => s.confirmedPlans);
   // `cart` is now pre-filled on the client from a cached last-known snapshot (see cart.ts's
   // readLastCart) so the basket page can skip its loading skeleton — but SSR has no localStorage, so
   // the server-rendered HTML never has that cache and `cart` is always null there. The badge's own
@@ -39,21 +37,10 @@ export default function LandingCart() {
   // lastKnownCount (not cart.items_count) — it's kept in step with every optimistic cart change, and
   // was already safe to read on the very first client render even before the cache-on-init change.
   const count = lastKnownCount;
-  // cart.totals.total_price is Store API's own full-price total — it has no idea a plan was picked,
-  // so this rebuilds the subtotal from each line's actual confirmed plan, same as the basket page.
-  const subtotalMinor = items.reduce(
-    (sum, item) =>
-      item.key.startsWith("optimistic-")
-        ? sum
-        : sum +
-          discountedLineTotalMinor(
-            Number(item.prices.price),
-            item.quantity,
-            getConfirmedPlan(confirmedPlans, item.key, item.quantity),
-          ),
-    0,
-  );
-  const subtotal = cart ? formatMoney(String(subtotalMinor), cart.totals) : "";
+  // WCSATT (backend) applies the real plan discount before the Store API response is built, so
+  // cart.totals.total_items is already correct — no client-side recompute needed (see
+  // scratch-ark-subscription-plan-backend-snippet.php and CartTable.tsx's ItemSubtotal).
+  const subtotal = cart ? formatMoney(cart.totals.total_items, cart.totals) : "";
 
   return (
     <div
@@ -107,16 +94,7 @@ export default function LandingCart() {
                             state, so show a transient label instead until the real price lands. */}
                         {item.key.startsWith("optimistic-")
                           ? `${item.quantity} × …`
-                          : `${item.quantity} × ${formatMoney(
-                              String(
-                                discountedLineTotalMinor(
-                                  Number(item.prices.price),
-                                  1,
-                                  getConfirmedPlan(confirmedPlans, item.key, item.quantity),
-                                ),
-                              ),
-                              item.prices,
-                            )}`}
+                          : `${item.quantity} × ${formatMoney(item.prices.price, item.prices)}`}
                       </span>
                     </div>
                     <span className="h-[55px] w-[55px] shrink-0 border border-border bg-white">

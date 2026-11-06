@@ -4,6 +4,10 @@
 import { currencyCookieHeader, currencyFromCookieHeader } from "@/lib/currency";
 
 const STORE_API = `${process.env.NEXT_PUBLIC_WP_URL}/wp-json/wc/store/v1`;
+// Store API's own /cart/add-item has no field for "which subscription plan" — same-product adds
+// always merge into one line. A custom WP endpoint (ark/v1/cart/add-item) tags the cart item and
+// applies the real discount server-side instead; see scratch-ark-subscription-plan-backend-snippet.php.
+const ARK_API = `${process.env.NEXT_PUBLIC_WP_URL}/wp-json/ark/v1`;
 
 export async function POST(request: Request, { params }: { params: Promise<{ action: string[] }> }) {
   const { action } = await params;
@@ -11,7 +15,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   const cartToken = request.headers.get("Cart-Token");
   const body = await request.text();
 
-  const res = await fetch(`${STORE_API}/cart/${action.join("/")}`, {
+  const base = action.join("/") === "add-item" ? ARK_API : STORE_API;
+  const res = await fetch(`${base}/cart/${action.join("/")}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

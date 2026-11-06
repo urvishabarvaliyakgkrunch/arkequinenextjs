@@ -43,3 +43,5 @@ next-env.d.ts
 # Internal working docs (clauderules §0.3) — never committed
 PROJECT-CONTEXT.md
 PERFORMANCE-REPORT.md
+scratch-ark-subscription-plan-backend-snippet.php
+ark-headless-cart-plugin.php

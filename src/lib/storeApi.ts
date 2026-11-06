@@ -33,7 +33,13 @@ export interface StoreApiCartItem {
   variation: StoreApiCartItemVariation[];
   // Extra per-item details some plugins attach (e.g. "Unit pricing measure")
   item_data: StoreApiCartItemData[];
-  prices: StoreApiMoney & { price: string };
+  // `price` is whatever plan is actually active for this line (already discounted for a
+  // monthly/every_3_months item) — `regular_price` is the product's true undiscounted unit price,
+  // the same regardless of which plan the line is on. CartTable.tsx's "what you'd pay" preview
+  // radios must base their hypothetical options on `regular_price`, not `price` — using `price`
+  // for an already-discounted line double-discounted the preview (e.g. 10% off of 75.60 instead of
+  // 10% off of 84.00).
+  prices: StoreApiMoney & { price: string; regular_price: string };
   totals: StoreApiMoney & { line_subtotal: string };
 }
 
@@ -140,9 +146,14 @@ export async function getCart(): Promise<StoreApiCart> {
   return storeFetch("");
 }
 
-export async function addToCart(id: number, quantity = 1): Promise<StoreApiCart> {
+// "plan" (one_time/monthly/every_3_months) is forwarded to our custom ark/v1/cart/add-item
+// WordPress endpoint (see /api/cart/[...action]/route.ts) so the backend tags the cart item
+// and applies the real 10% discount — WooCommerce's own Store API add-item has no field for
+// this, so a plain add-item call can't tell "subscribe" apart from "buy now" and always merges
+// same-product adds into one line.
+export async function addToCart(id: number, quantity = 1, plan: string = "one_time"): Promise<StoreApiCart> {
   await ensureNonce();
-  return storeFetch("/add-item", { method: "POST", body: JSON.stringify({ id, quantity }) });
+  return storeFetch("/add-item", { method: "POST", body: JSON.stringify({ id, quantity, plan }) });
 }
 
 export async function updateItemQuantity(key: string, quantity: number): Promise<StoreApiCart> {

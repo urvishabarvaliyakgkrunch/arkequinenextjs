@@ -207,10 +207,16 @@ export const useCartStore = create<CartState>((set, get) => ({
     const prevCart = get().cart;
     const prevCount = get().lastKnownCount;
     const optimisticCount = prevCount + quantity;
-    // Already in the cart (same product, no variation picked here): bump its existing row's quantity
-    // in place instead of appending a second "new" row that only merges away once the real response
-    // lands — that's what made it look like a duplicate flashed up then turned into a qty update.
-    const existing = prevCart?.items.find((i) => i.id === id && !i.key.startsWith("optimistic-"));
+    // Same product with the same plan: bump its existing row's quantity in place instead of
+    // appending a second row. Different plans are separate line items (e.g. "Buy Now" €84 vs
+    // "1-month sub" €75.60 for the same product should show as two rows).
+    const confirmedPlans = get().confirmedPlans;
+    const existing = prevCart?.items.find((i) => {
+      if (i.id !== id || i.key.startsWith("optimistic-")) return false;
+      // Only merge if the confirmed plan for the existing item matches the incoming plan
+      const existingPlan = getConfirmedPlan(confirmedPlans, i.key, i.quantity);
+      return existingPlan === (plan ?? "one_time");
+    });
     // We don't have the real Store API price yet (only the GraphQL-side name/image), so a brand-new
     // mini-cart row shows this item with a placeholder price until the real response replaces it — see
     // CartIcon.tsx, which special-cases this key prefix to show "Adding…" instead of formatMoney() on a fake "0".
@@ -227,15 +233,35 @@ export const useCartStore = create<CartState>((set, get) => ({
       prices: { currency_minor_unit: 2, currency_symbol: "", price: "0" },
       totals: { currency_minor_unit: 2, currency_symbol: "", line_subtotal: "0" },
     };
-    const optimisticCart = prevCart
-      ? {
-          ...prevCart,
-          items: existing
-            ? prevCart.items.map((i) => (i === existing ? { ...i, quantity: i.quantity + quantity } : i))
-            : [...prevCart.items, optimisticItem],
-          items_count: optimisticCount,
-        }
-      : prevCart;
+    let optimisticCart: StoreApiCart | null;
+    if (prevCart) {
+      optimisticCart = {
+        ...prevCart,
+        items: existing
+          ? prevCart.items.map((i) => (i === existing ? { ...i, quantity: i.quantity + quantity } : i))
+          : [...prevCart.items, optimisticItem],
+        items_count: optimisticCount,
+      };
+    } else {
+      // First add on a fresh session: create a minimal cart structure with the new item. Must
+      // include a `totals` object (even if placeholder) — LandingCart.tsx reads
+      // cart.totals.total_items unconditionally once `cart` is truthy, and an object missing
+      // `totals` entirely crashed it with "Cannot read properties of undefined (reading
+      // 'total_items')" on literally the first-ever add-to-basket click in a session.
+      optimisticCart = {
+        ...({} as StoreApiCart),
+        items: [optimisticItem],
+        items_count: optimisticCount,
+        totals: {
+          currency_minor_unit: 2,
+          currency_symbol: "",
+          total_items: "0",
+          total_price: "0",
+          total_discount: "0",
+          total_shipping: null,
+        },
+      };
+    }
     const versionAtStart = ++cartVersion;
     persistCount(optimisticCount);
     persistCart(optimisticCart);
@@ -251,14 +277,21 @@ export const useCartStore = create<CartState>((set, get) => ({
       set((s) => (s.justAddedId === id ? { justAddedId: null } : {}));
     }, 1500);
     try {
-      const cart = await enqueueMutation(() => apiAddToCart(id, quantity));
+      const cart = await enqueueMutation(() => apiAddToCart(id, quantity, plan ?? "one_time"));
       persistCount(cart.items_count);
       persistCart(cart);
       // The product page already picked a plan (its quantity already matches planToQuantity(plan)) —
       // record it as confirmed so the basket page's radios land on the right option immediately,
       // instead of falling back to quantityToPlan() which can't tell "monthly" apart from "one-time".
       if (plan && plan !== "one_time") {
-        const addedItem = cart.items.find((i) => i.id === id);
+        // `cart.items.find(i => i.id === id)` always grabbed the FIRST line with this product id —
+        // wrong as soon as the same product has multiple plans in the cart (e.g. a Buy Now line
+        // already in the cart), since it tagged THAT line's key with the plan that was really just
+        // added to a brand-new line. Exclude keys that already existed before this call so only the
+        // actually-new line is matched — this was showing the wrong radio pre-selected (and the
+        // wrong item's price) on the basket page for every product added under more than one plan.
+        const prevKeys = new Set((prevCart?.items ?? []).map((i) => i.key));
+        const addedItem = cart.items.find((i) => i.id === id && !prevKeys.has(i.key));
         if (addedItem) {
           const nextConfirmed = { ...get().confirmedPlans, [addedItem.key]: plan };
           persistConfirmedPlans(nextConfirmed);
