@@ -4,6 +4,7 @@ import { Lato } from "next/font/google";
 import localFont from "next/font/local";
 import LandingHeader from "@/components/landing/LandingHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
+import TidioChat from "@/components/layout/TidioChat";
 import CartToast from "@/components/cart/CartToast";
 import "./globals.css";
 
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main className="flex-1">{children}</main>
         <SiteFooter />
         <CartToast />
+        <TidioChat />
       </body>
     </html>
   );

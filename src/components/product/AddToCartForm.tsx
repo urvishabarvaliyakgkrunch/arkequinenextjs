@@ -29,7 +29,7 @@ export default function AddToCartForm({ product }: { product: ProductPageData })
   // The value picked in each attribute dropdown so far, e.g. { size: "Aquatabs Inline Cartridge" }
   const [selected, setSelected] = useState<Record<string, string>>({});
   // Matches the live product page: "Buy Now" (full price) vs "Subscribe to save 10%" (Deliver: dropdown)
-  const [purchaseType, setPurchaseType] = useState<"buy_now" | "subscribe">("subscribe");
+  const [purchaseType, setPurchaseType] = useState<"buy_now" | "subscribe">("buy_now");
   const [deliverPlan, setDeliverPlan] = useState<Extract<SubscriptionPlan, "monthly" | "every_3_months">>("monthly");
   const addItem = useCartStore((s) => s.addItem);
   const router = useRouter();
