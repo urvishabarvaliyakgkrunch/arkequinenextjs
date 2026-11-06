@@ -5,13 +5,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { formatMoney } from "@/lib/storeApi";
-import { useCartStore } from "@/store/cart";
+import { useCartStore, getConfirmedPlan } from "@/store/cart";
+import { discountedLineTotalMinor } from "@/lib/subscriptionPricing";
 
 // Same cart store as the add-to-cart buttons, so the badge and mini-cart stay in sync on every page
 export default function LandingCart() {
   const cart = useCartStore((s) => s.cart);
   const lastKnownCount = useCartStore((s) => s.lastKnownCount);
   const hydrate = useCartStore((s) => s.hydrateIfActive);
+  const confirmedPlans = useCartStore((s) => s.confirmedPlans);
   // `cart` is now pre-filled on the client from a cached last-known snapshot (see cart.ts's
   // readLastCart) so the basket page can skip its loading skeleton — but SSR has no localStorage, so
   // the server-rendered HTML never has that cache and `cart` is always null there. The badge's own
@@ -37,7 +39,21 @@ export default function LandingCart() {
   // lastKnownCount (not cart.items_count) — it's kept in step with every optimistic cart change, and
   // was already safe to read on the very first client render even before the cache-on-init change.
   const count = lastKnownCount;
-  const subtotal = cart ? formatMoney(cart.totals.total_price, cart.totals) : "";
+  // cart.totals.total_price is Store API's own full-price total — it has no idea a plan was picked,
+  // so this rebuilds the subtotal from each line's actual confirmed plan, same as the basket page.
+  const subtotalMinor = items.reduce(
+    (sum, item) =>
+      item.key.startsWith("optimistic-")
+        ? sum
+        : sum +
+          discountedLineTotalMinor(
+            Number(item.prices.price),
+            item.quantity,
+            getConfirmedPlan(confirmedPlans, item.key, item.quantity),
+          ),
+    0,
+  );
+  const subtotal = cart ? formatMoney(String(subtotalMinor), cart.totals) : "";
 
   return (
     <div
@@ -57,15 +73,14 @@ export default function LandingCart() {
           <line x1="3" y1="6" x2="21" y2="6" />
           <path d="M16 10a4 4 0 0 1-8 0" />
         </svg>
-        {/* Server always renders 0 (no localStorage during SSR); the client legitimately shows the
-            cached count instead. Deliberately NOT using suppressHydrationWarning here — that freezes
-            the DOM at the server's stale "0" until some other state change triggers a real re-render,
-            defeating the whole point of showing the cached count instantly. Leaving the mismatch
-            unsuppressed lets React's own hydration-mismatch recovery redraw this subtree with the
-            correct client value right away — the cost is a harmless dev-console-only error, not a
-            user-visible one (same tradeoff as the extension-caused hydration noise in gotcha #6). */}
+        {/* Server always renders 0 (no localStorage during SSR). Next.js 16's dev overlay now blocks
+            the whole page on any unsuppressed text mismatch (not just a quiet console warning like
+            before), so showing the raw client count here isn't viable anymore. Same `mounted` gate as
+            the dropdown's item list below: both render 0 on the very first paint (matching the
+            server), then swap to the real count a frame later via the mount effect — no mismatch, and
+            no "frozen at 0" problem either, since this is a real state update, not suppressHydrationWarning. */}
         <span className="-mt-5 -ml-[2px] h-[18px] w-[18px] rounded-full bg-teal text-center text-[10px] leading-[18px] text-white">
-          {count}
+          {mounted ? count : 0}
         </span>
       </Link>
       <div
@@ -92,7 +107,16 @@ export default function LandingCart() {
                             state, so show a transient label instead until the real price lands. */}
                         {item.key.startsWith("optimistic-")
                           ? `${item.quantity} × …`
-                          : `${item.quantity} × ${formatMoney(item.prices.price, item.prices)}`}
+                          : `${item.quantity} × ${formatMoney(
+                              String(
+                                discountedLineTotalMinor(
+                                  Number(item.prices.price),
+                                  1,
+                                  getConfirmedPlan(confirmedPlans, item.key, item.quantity),
+                                ),
+                              ),
+                              item.prices,
+                            )}`}
                       </span>
                     </div>
                     <span className="h-[55px] w-[55px] shrink-0 border border-border bg-white">

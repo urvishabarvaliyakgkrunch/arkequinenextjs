@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCartStore, getConfirmedPlan, type SubscriptionPlan } from "@/store/cart";
 import { formatMoney, type StoreApiCart, type StoreApiCartItem } from "@/lib/storeApi";
-import { formatEuro, subscriptionDiscountedPrice } from "@/lib/subscriptionPricing";
+import { formatEuro, subscriptionDiscountedPrice, discountedLineTotalMinor } from "@/lib/subscriptionPricing";
 
 // Matches ark-equine.com/basket/'s table.shop_table — 13px body text, uppercase bold 12px headers,
 // #E1E1E1 borders, measured live via computed styles.
@@ -39,11 +39,30 @@ export default function CartTable({ cart }: { cart: StoreApiCart }) {
   );
 }
 
+// The Store API only gives us the raw WordPress permalink (e.g. "https://ark-equine.com/product/bone-protect/")
+// — linking straight to that would bounce the shopper off our own site onto the WP backend. Pull the
+// slug back out of it so basket rows link to our own /product/[slug] route, same as everywhere else.
+// WCSATT subscription items can carry a "?convert_to_sub_215=..." query string on this field (the
+// backend's own doing, not ours) — splitting the raw string on "/" let that leak into the path
+// (produced "/product?convert_to_sub_215=0", a 404). Parse it as a real URL so only the pathname
+// is used; the query string is simply dropped.
+function productHrefFromPermalink(permalink: string): string {
+  try {
+    const { pathname } = new URL(permalink);
+    const segments = pathname.split("/").filter(Boolean);
+    const slug = segments[segments.length - 1];
+    return slug ? `/product/${slug}` : "/basket";
+  } catch {
+    return "/basket";
+  }
+}
+
 function CartRow({ item }: { item: StoreApiCartItem }) {
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
   const pendingKey = useCartStore((s) => s.pendingKey);
   const isPending = pendingKey === item.key;
+  const productHref = productHrefFromPermalink(item.permalink);
 
   return (
     <tr className={isPending ? "opacity-50" : ""}>
@@ -59,7 +78,7 @@ function CartRow({ item }: { item: StoreApiCartItem }) {
       </td>
       <td className="border border-ark-border p-[6px_12px] align-middle">
         {item.images[0] ? (
-          <Link href={item.permalink}>
+          <Link href={productHref}>
             <Image
               src={item.images[0].thumbnail}
               alt={item.images[0].alt || item.name}
@@ -71,7 +90,7 @@ function CartRow({ item }: { item: StoreApiCartItem }) {
         ) : null}
       </td>
       <td className="border border-ark-border p-[6px_12px] align-middle">
-        <Link href={item.permalink} className="text-ark-price">
+        <Link href={productHref} className="text-ark-price">
           {item.name}
         </Link>
         {/* Shows which option was picked, e.g. "size: 10kg", under the product name — same as the live cart */}
@@ -122,20 +141,31 @@ function CartRow({ item }: { item: StoreApiCartItem }) {
         </div>
       </td>
       <td className="border border-ark-border p-[6px_12px] align-middle font-semibold text-ark-price">
-        {formatMoney(item.totals.line_subtotal, item.totals)}
+        <ItemSubtotal item={item} />
       </td>
     </tr>
   );
 }
 
+// Store API's own line_subtotal is always full-price × quantity (it has no idea a plan was picked) —
+// recompute from the confirmed plan so a "monthly"/"every_3_months" row shows the discounted total,
+// same as the live site's basket (e.g. Bone Protect at qty 1 monthly shows €75.60, not €84.00).
+function ItemSubtotal({ item }: { item: StoreApiCartItem }) {
+  const confirmedPlans = useCartStore((s) => s.confirmedPlans);
+  const plan = getConfirmedPlan(confirmedPlans, item.key, item.quantity);
+  if (plan === "one_time") return <>{formatMoney(item.totals.line_subtotal, item.totals)}</>;
+  const lineMinor = discountedLineTotalMinor(Number(item.prices.price), item.quantity, plan);
+  return <>{formatMoney(String(lineMinor), item.prices)}</>;
+}
+
 // Live site's subscribe-and-save radios (WooCommerce Subscriptions/WCSATT). That plugin's real
 // per-unit discount data isn't exposed by the Store API (checked: extensions/item_data are empty for
 // it) and wiring it up for real needs a backend change this project isn't making, so the €/month and
-// €/3-months labels stay the same 10%-off guest estimate used on the product cards — not the real
-// charged amount. Picking a radio only stages the choice (useCartStore's selectedPlans); nothing hits
-// the cart until "Update basket" is clicked (see CartCouponRow), which calls the real Store API
-// quantity-update endpoint — so the Subtotal column stays a true, correctly calculated WooCommerce
-// total, just at full per-unit price (quantity × full price) since WCSATT's discount isn't reachable.
+// €/3-months labels — and the Subtotal column above (see ItemSubtotal) — are the same 10%-off guest
+// estimate used on the product cards, not WCSATT's own real charged amount. Picking a radio here only
+// stages the choice (useCartStore's selectedPlans); nothing hits the cart's real quantity until
+// "Update basket" is clicked (see CartCouponRow). The product page's "Subscribe" flow instead commits
+// the plan immediately as confirmedPlans (see cart.ts's addItem) since it already knows the quantity.
 function SubscriptionPriceOptions({ item }: { item: StoreApiCartItem }) {
   const setPlan = useCartStore((s) => s.setPlan);
   const confirmedPlans = useCartStore((s) => s.confirmedPlans);

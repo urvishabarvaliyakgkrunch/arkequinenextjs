@@ -68,6 +68,29 @@ function persistCart(cart: StoreApiCart | null) {
   else localStorage.removeItem(LAST_CART_KEY);
 }
 
+// confirmedPlans used to live only in memory — fine for the same tab/session, but a fresh page load
+// (new tab, hard refresh, or just clicking the mini-cart's "View basket" link on some navigations)
+// re-runs the whole module, wiping it back to {}. The basket page then fell back to
+// quantityToPlan(item.quantity), which can't tell "monthly" (qty 1) apart from "one-time" (also qty
+// 1) — so a product-page "Subscribe → Every month" pick silently reverted to showing the full price.
+// Persisting this the same way as the cart snapshot fixes it.
+const CONFIRMED_PLANS_KEY = "wc_cart_confirmed_plans";
+
+function readConfirmedPlans(): Record<string, SubscriptionPlan> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(CONFIRMED_PLANS_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, SubscriptionPlan>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function persistConfirmedPlans(plans: Record<string, SubscriptionPlan>) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(CONFIRMED_PLANS_KEY, JSON.stringify(plans));
+}
+
 interface CartState {
   cart: StoreApiCart | null;
   lastKnownCount: number;
@@ -142,7 +165,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   pendingKey: null,
   lastAdded: null,
   selectedPlans: {},
-  confirmedPlans: {},
+  confirmedPlans: readConfirmedPlans(),
   applyingPlans: false,
 
   hydrate: () => {
@@ -229,11 +252,9 @@ export const useCartStore = create<CartState>((set, get) => ({
       if (plan && plan !== "one_time") {
         const addedItem = cart.items.find((i) => i.id === id);
         if (addedItem) {
-          set((s) => ({
-            cart,
-            lastKnownCount: cart.items_count,
-            confirmedPlans: { ...s.confirmedPlans, [addedItem.key]: plan },
-          }));
+          const nextConfirmed = { ...get().confirmedPlans, [addedItem.key]: plan };
+          persistConfirmedPlans(nextConfirmed);
+          set({ cart, lastKnownCount: cart.items_count, confirmedPlans: nextConfirmed });
           return;
         }
       }
@@ -282,6 +303,7 @@ export const useCartStore = create<CartState>((set, get) => ({
       set((s) => {
         const { [key]: _selected, ...selectedPlans } = s.selectedPlans;
         const { [key]: _confirmed, ...confirmedPlans } = s.confirmedPlans;
+        persistConfirmedPlans(confirmedPlans);
         return { cart, lastKnownCount: cart.items_count, selectedPlans, confirmedPlans };
       });
     } catch (err) {
@@ -317,7 +339,14 @@ export const useCartStore = create<CartState>((set, get) => ({
       const cart = await enqueueMutation(() => apiRemoveItem(key));
       persistCount(cart.items_count);
       persistCart(cart);
-      set({ cart, lastKnownCount: cart.items_count });
+      // Clean up the removed item's stale plan entries — otherwise a later item that happens to land
+      // on the same Store API key would incorrectly inherit this one's old confirmed plan.
+      set((s) => {
+        const { [key]: _selected, ...selectedPlans } = s.selectedPlans;
+        const { [key]: _confirmed, ...confirmedPlans } = s.confirmedPlans;
+        persistConfirmedPlans(confirmedPlans);
+        return { cart, lastKnownCount: cart.items_count, selectedPlans, confirmedPlans };
+      });
     } catch (err) {
       // See addItem's catch: don't stomp a later, unrelated optimistic change with this stale snapshot.
       if (cartVersion === versionAtStart) {
@@ -373,6 +402,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         nextConfirmed[item.key] = plan;
       }
       persistCart(updatedCart);
+      persistConfirmedPlans(nextConfirmed);
       set({ cart: updatedCart, confirmedPlans: nextConfirmed, applyingPlans: false });
     } catch (err) {
       set({ applyingPlans: false });

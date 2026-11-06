@@ -21,7 +21,26 @@ export function formatEuro(amount: number): string {
 
 // The per-unit price shown next to "Every month" / "Every 3 months" — same number both times,
 // matching the live product page (the "3 items" wording communicates the bundle, not a different price).
-export function subscriptionDiscountedPrice(formattedPrice: string): number {
-  const amount = parseFormattedPrice(formattedPrice);
+export function applyGuestDiscount(amount: number): number {
   return amount * (1 - GUEST_SUBSCRIPTION_DISCOUNT_PERCENT / 100);
+}
+
+export function subscriptionDiscountedPrice(formattedPrice: string): number {
+  return applyGuestDiscount(parseFormattedPrice(formattedPrice));
+}
+
+// Store API cart items carry price as an integer minor-unit string (e.g. "8400" = €84.00) — this is
+// what the mini-cart, basket table, and basket totals all actually have to work with, so the discount
+// math is done in minor units (no float rounding drift) rather than round-tripping through a formatted
+// string each time. One home for "what does this line actually cost given its plan" so the mini-cart,
+// basket rows, and basket totals can never disagree with each other.
+export type CartLinePlan = "one_time" | "monthly" | "every_3_months";
+
+export function discountedLineTotalMinor(
+  unitPriceMinor: number,
+  quantity: number,
+  plan: CartLinePlan,
+): number {
+  const fullLine = unitPriceMinor * quantity;
+  return plan === "one_time" ? fullLine : Math.round(fullLine * (1 - GUEST_SUBSCRIPTION_DISCOUNT_PERCENT / 100));
 }
