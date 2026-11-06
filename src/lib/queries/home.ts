@@ -21,7 +21,7 @@ export async function getProductsBySlug(slugs: string[]): Promise<Map<string, Pr
     const data = await gql<{ products: { nodes: ProductCardFields[] } }>(
       GET_PRODUCTS_BY_SLUG,
       { slugs },
-      { revalidate: 86400 },
+      { revalidate: 86400, currency: true },
     );
     return new Map(data.products.nodes.map((p) => [p.slug, p]));
   } catch {
@@ -65,7 +65,7 @@ export async function getBestSellers(): Promise<BestSellerProduct[]> {
     const data = await gql<{ productCategory: { products: { nodes: BestSellerProduct[] } } | null }>(
       GET_BEST_SELLERS,
       {},
-      { revalidate: 3600, tags: [PRODUCTS_TAG] },
+      { revalidate: 3600, tags: [PRODUCTS_TAG], currency: true },
     );
     const nodes = data.productCategory?.products.nodes ?? [];
     return [...nodes].sort((a, b) => a.name.localeCompare(b.name));

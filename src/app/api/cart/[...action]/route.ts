@@ -1,6 +1,8 @@
 // src/app/api/cart/[...action]/route.ts
 // Same-origin proxy for POST /wc/store/v1/cart/<action> (add-item, update-item, remove-item, apply-coupon,
 // remove-coupon) — see src/app/api/cart/route.ts for why this proxy exists at all.
+import { currencyCookieHeader, currencyFromCookieHeader } from "@/lib/currency";
+
 const STORE_API = `${process.env.NEXT_PUBLIC_WP_URL}/wp-json/wc/store/v1`;
 
 export async function POST(request: Request, { params }: { params: Promise<{ action: string[] }> }) {
@@ -15,6 +17,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
       "Content-Type": "application/json",
       ...(nonce ? { Nonce: nonce } : {}),
       ...(cartToken ? { "Cart-Token": cartToken } : {}),
+      // CURCY converts the cart prices from this cookie
+      Cookie: currencyCookieHeader(currencyFromCookieHeader(request.headers.get("cookie"))),
     },
     body,
   });

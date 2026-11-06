@@ -1,22 +1,34 @@
 // src/lib/graphql.ts
-  const WP_GRAPHQL_URL = `${process.env.NEXT_PUBLIC_WP_GRAPHQL_URL}`;
+import { currencyCookieHeader } from "@/lib/currency";
+import { getCurrentCurrency } from "@/lib/currencyServer";
+
+const WP_GRAPHQL_URL = `${process.env.NEXT_PUBLIC_WP_GRAPHQL_URL}`;
 
 // Tag every catalog query so one revalidate call can clear them all
 export const PRODUCTS_TAG = "products";
 // Menu has its own tag so a product refresh does not force the slow menu call again
 export const MENU_TAG = "menu";
 
+// Price queries pass `currency: true` so CURCY converts prices for the visitor's chosen currency
+type GqlOptions = { revalidate?: number; tags?: string[]; currency?: boolean };
+
 export async function gql<T>(
   query: string,
   variables: Record<string, unknown> = {},
-  options: { revalidate?: number; tags?: string[] } = {}
+  options: GqlOptions = {}
 ): Promise<T> {
+  const currencyCode = options.currency ? await getCurrentCurrency() : null;
+
   // A busy WP backend sometimes answers 5xx; retry a couple of times before giving up
   let res: Response;
   for (let attempt = 0; ; attempt++) {
     res = await fetch(WP_GRAPHQL_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        // Headers are part of the fetch cache key, so each currency keeps its own cached copy
+        ...(currencyCode ? { Cookie: currencyCookieHeader(currencyCode) } : {}),
+      },
       body: JSON.stringify({ query, variables }),
       next: {
         revalidate: options.revalidate ?? 3600,

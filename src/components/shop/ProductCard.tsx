@@ -1,6 +1,6 @@
 // src/components/shop/ProductCard.tsx
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/ui/HoverPrefetchLink";
 import type { ProductCardFields } from "@/types/product";
 import { stripHtml, truncateWords } from "@/lib/stripHtml";
 import AddToCartButton from "@/components/cart/AddToCartButton";

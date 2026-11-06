@@ -74,7 +74,7 @@ export async function getCategoryProductsOnly(
   const data = await gql<{ productCategory: { products: { nodes: ProductCardFields[] } } | null }>(
     GET_CATEGORY_PRODUCTS_ONLY,
     { slug, first, orderby: orderby ? [orderby] : null, typeIn: typeInFor(slug) },
-    { revalidate: 3600 }
+    { revalidate: 3600 , currency: true }
   );
   return data.productCategory?.products.nodes ?? null;
 }
@@ -101,6 +101,6 @@ export async function getCategoryPageData(
   return gql<CategoryPageData>(
     GET_CATEGORY_PRODUCTS,
     { slug, first, orderby: orderby ? [orderby] : null, typeIn: typeInFor(slug) },
-    { revalidate: 3600 }
+    { revalidate: 3600 , currency: true}
   );
 }

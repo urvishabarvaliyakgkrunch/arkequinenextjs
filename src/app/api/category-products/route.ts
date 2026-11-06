@@ -17,6 +17,7 @@ export async function GET(request: Request) {
 
   if (!products) return Response.json({ error: "Category not found" }, { status: 404 });
   return Response.json(products, {
-    headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" },
+    // Vary: Cookie so a CDN keeps separate copies per chosen currency
+    headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400", Vary: "Cookie" },
   });
 }
