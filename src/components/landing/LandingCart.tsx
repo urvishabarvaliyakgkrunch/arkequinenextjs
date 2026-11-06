@@ -11,7 +11,7 @@ import { useCartStore } from "@/store/cart";
 export default function LandingCart() {
   const cart = useCartStore((s) => s.cart);
   const lastKnownCount = useCartStore((s) => s.lastKnownCount);
-  const hydrate = useCartStore((s) => s.hydrate);
+  const hydrate = useCartStore((s) => s.hydrateIfActive);
   // `cart` is now pre-filled on the client from a cached last-known snapshot (see cart.ts's
   // readLastCart) so the basket page can skip its loading skeleton — but SSR has no localStorage, so
   // the server-rendered HTML never has that cache and `cart` is always null there. The badge's own
