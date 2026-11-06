@@ -1,6 +1,6 @@
 // src/components/landing/LandingBest.tsx
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/ui/HoverPrefetchLink";
 import SectionTitle from "@/components/landing/SectionTitle";
 import Reveal from "@/components/landing/Reveal";
 import BestCarousel from "@/components/landing/BestCarousel";
@@ -19,10 +19,15 @@ function splitPrice(price: string | null): string {
   return price.replace(/[^0-9.,\-\s]/g, "").trim();
 }
 
-function Price({ value, cls }: { value: string; cls: string }) {
+// Symbol comes from the backend price so it follows the chosen currency (CURCY); fixed € only for the static fallback
+function priceSymbol(price: string | null): string {
+  return price?.match(/[^0-9.,-s]+/)?.[0] ?? "€";
+}
+
+function Price({ symbol, value, cls }: { symbol: string; value: string; cls: string }) {
   return (
     <span className="flex items-baseline gap-[5px]">
-      <span className={`text-[13px] font-bold ${cls}`}>€</span>
+      <span className={`text-[13px] font-bold ${cls}`}>{symbol}</span>
       <span className={`font-serif-lt text-[26px] font-normal ${cls}`}>{value}</span>
     </span>
   );
@@ -55,7 +60,7 @@ export default function LandingBest({ products }: { products: BestSellerProduct[
             <p className="mb-5 flex-1 text-[12.5px] leading-[1.5] text-[#9a9b9d]">{truncateWords(stripHtml(p.shortDescription), 12)}</p>
             <div className="flex items-start justify-between gap-[10px]">
               <div className="flex flex-col gap-[3px]">
-                <Price value={splitPrice(p.price)} cls="text-graphite" />
+                <Price symbol={priceSymbol(p.price)} value={splitPrice(p.price)} cls="text-graphite" />
                 {/* Guest-facing default from the live site's subscription plugin (WCSATT) — matches shop page's ProductCard */}
                 <span className="text-[11px] text-[#9a9b9d]">
                   — or subscribe to save{" "}
@@ -94,7 +99,7 @@ export default function LandingBest({ products }: { products: BestSellerProduct[
             <p className="mb-5 flex-1 text-[12.5px] leading-[1.5] text-[#9a9b9d]">{truncateWords(c.desc, 12)}</p>
             <div className="flex items-start justify-between gap-[10px]">
               <div className="flex flex-col gap-[3px]">
-                <Price value={c.price} cls="text-graphite" />
+                <Price symbol="€" value={c.price} cls="text-graphite" />
                 <span className="text-[11px] text-[#9a9b9d]">
                   — or subscribe to save{" "}
                   <span className="font-semibold text-graphite">{GUEST_SUBSCRIPTION_DISCOUNT_PERCENT}%</span>
@@ -128,8 +133,8 @@ export default function LandingBest({ products }: { products: BestSellerProduct[
           <div className="flex items-start justify-between border-t border-white/[0.18] pt-[18px]">
             <div className="flex flex-col gap-[3px]">
               <span className="flex items-baseline gap-[5px]">
-                <span className="text-[13px] font-bold">€</span>
-                <span className="font-serif-lt text-[28px] font-normal">{hero ? splitPrice(hero.price) : BEST.hero.price}</span>
+                <span className="text-[13px] font-bold">{hero ? priceSymbol(hero.price) : "€"}</span>
+                <span className="font-[Helvetica,Arial,sans-serif] text-[17px] font-normal">{hero ? splitPrice(hero.price) : BEST.hero.price}</span>
               </span>
               <span className="text-[11px] opacity-70">
                 — or subscribe to save{" "}

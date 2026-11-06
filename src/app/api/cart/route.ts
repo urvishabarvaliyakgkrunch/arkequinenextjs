@@ -2,6 +2,8 @@
 // Same-origin proxy for GET /wc/store/v1/cart — the backend's real (non-OPTIONS) responses don't
 // send Access-Control-Allow-Origin, so the browser can't call it cross-origin directly. Proxying
 // through our own origin (server-to-server, no CORS involved) sidesteps that backend limitation.
+import { currencyCookieHeader, currencyFromCookieHeader } from "@/lib/currency";
+
 const STORE_API = `${process.env.NEXT_PUBLIC_WP_URL}/wp-json/wc/store/v1`;
 
 export async function GET(request: Request) {
@@ -12,6 +14,8 @@ export async function GET(request: Request) {
     headers: {
       ...(nonce ? { Nonce: nonce } : {}),
       ...(cartToken ? { "Cart-Token": cartToken } : {}),
+      // CURCY converts the cart prices from this cookie
+      Cookie: currencyCookieHeader(currencyFromCookieHeader(request.headers.get("cookie"))),
     },
     cache: "no-store",
   });

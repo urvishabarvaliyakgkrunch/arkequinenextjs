@@ -26,6 +26,6 @@ export async function getShopPageData(options: { first?: number; orderby?: Produ
   return gql<ShopPageData>(
     GET_SHOP_PRODUCTS,
     { first, categoryIdIn: SHOP_CATEGORY_IDS, orderby: orderby ? [orderby] : null },
-    { revalidate: 3600 }
+    { revalidate: 3600, currency: true }
   );
 }

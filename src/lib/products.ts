@@ -32,7 +32,7 @@ export async function getProductPage(
     data = await gql<ProductPageResult>(
       PRODUCT_PAGE_QUERY,
       { slug },
-      { revalidate: PRODUCT_PAGE_SECONDS },
+      { revalidate: PRODUCT_PAGE_SECONDS, currency: true },
     );
   } catch (error) {
     // This backend answers an unknown slug with a GraphQL error instead of product = null: show the 404 page
@@ -56,7 +56,7 @@ export async function getBestSellers(): Promise<BestSellerProduct[]> {
     const data = await gql<{ products: { nodes: RawBestSeller[] } }>(
       BEST_SELLERS_QUERY,
       {},
-      { revalidate: PRODUCT_PAGE_SECONDS },
+      { revalidate: PRODUCT_PAGE_SECONDS, currency: true },
     );
     return data.products.nodes.map((p) => ({
       ...p,

@@ -118,8 +118,14 @@ let hydrating: Promise<void> | null = null;
 // local update already made every click feel instant, so there's no UI cost to running the *real*
 // network calls strictly one-at-a-time in click order instead — this queue does that.
 let mutationQueue: Promise<unknown> = Promise.resolve();
+let pendingMutations = 0;
 function enqueueMutation<T>(task: () => Promise<T>): Promise<T> {
+  pendingMutations++;
   const run = mutationQueue.then(task, task);
+  run.then(
+    () => pendingMutations--,
+    () => pendingMutations--,
+  );
   mutationQueue = run.then(
     () => undefined,
     () => undefined,
@@ -150,7 +156,9 @@ export const useCartStore = create<CartState>((set, get) => ({
     // Also goes through the mutation queue — otherwise a hydrate() fired while an add/remove is still
     // in flight (e.g. a page navigation right after a click) could land first with a stale snapshot
     // and overwrite the in-progress optimistic/real update.
-    hydrating ??= enqueueMutation(getCart)
+    // Nothing in flight = read right away, so the first "Add" click no longer waits ~3s behind the
+    // page-load cart read; cartVersion below still drops a result that a later click made stale.
+    hydrating ??= (pendingMutations === 0 ? getCart() : enqueueMutation(getCart))
       .then((cart) => {
         // A mutation started after this hydrate began — its own (queued, more current) response will
         // land next; applying this older snapshot now would just stomp it straight back out.

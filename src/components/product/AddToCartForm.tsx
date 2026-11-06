@@ -4,6 +4,7 @@
 import { useMemo, useState } from "react";
 import { useCartStore, planToQuantity, type SubscriptionPlan } from "@/store/cart";
 import { subscriptionDiscountedPrice, formatEuro, GUEST_SUBSCRIPTION_DISCOUNT_PERCENT } from "@/lib/subscriptionPricing";
+import EnquiryButton from "@/components/product/EnquiryButton";
 import type { ProductPageData } from "@/types/product";
 
 // Quantity box and button; adds through the shared cart store, so the header basket and toast update too.
@@ -200,12 +201,7 @@ export default function AddToCartForm({ product }: { product: ProductPageData })
         </>
       )}
 
-      <button
-        type="button"
-        className="mb-5 mr-[2px] mt-[12.4px] h-[42px] cursor-pointer rounded-[2px] bg-primary p-[15px] text-xs font-bold leading-3 text-white transition-colors duration-300 ease-out hover:bg-secondary"
-      >
-        Make an enquiry about product
-      </button>
+      <EnquiryButton product={product} />
     </>
   );
 }

@@ -1,5 +1,10 @@
 // src/components/landing/LandingFlags.tsx
-// Euro / Pound currency flags shown next to the cart, as on the live site header
+"use client";
+
+import { CURRENCIES } from "@/lib/currency";
+import { useCurrency } from "@/hooks/useCurrency";
+
+// Euro / Pound currency switcher shown next to the cart, as on the live site header
 function EuFlag() {
   const stars = Array.from({ length: 12 }, (_, i) => {
     const a = (i * Math.PI) / 6;
@@ -27,15 +32,30 @@ function UkFlag() {
   );
 }
 
+const FLAGS = { EUR: EuFlag, GBP: UkFlag } as const;
+
 export default function LandingFlags() {
+  const { currency, setCurrency } = useCurrency();
+
   return (
-    <div className="flex items-center max-[900px]:hidden">
-      <a href="#" aria-label="Euro" className="flex h-[20px] w-[28px] items-center justify-center">
-        <EuFlag />
-      </a>
-      <a href="#" aria-label="Pound sterling" className="flex h-[20px] w-[28px] items-center justify-center">
-        <UkFlag />
-      </a>
+    <div className="flex items-center max-[900px]:hidden" role="group" aria-label="Currency">
+      {CURRENCIES.map(({ code, label }) => {
+        const Flag = FLAGS[code];
+        const active = code === currency;
+        return (
+          <button
+            key={code}
+            type="button"
+            aria-label={label}
+            aria-pressed={active}
+            title={label}
+            onClick={() => setCurrency(code)}
+            className={`flex h-[20px] w-[28px] cursor-pointer items-center justify-center border-0 bg-transparent p-0 transition-opacity ${active ? "opacity-100" : "opacity-50 hover:opacity-100"}`}
+          >
+            <Flag />
+          </button>
+        );
+      })}
     </div>
   );
 }
