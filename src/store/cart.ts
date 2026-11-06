@@ -230,7 +230,7 @@ export const useCartStore = create<CartState>((set, get) => ({
       images: [{ thumbnail: image ?? "", alt: name }],
       variation: [],
       item_data: [],
-      prices: { currency_minor_unit: 2, currency_symbol: "", price: "0" },
+      prices: { currency_minor_unit: 2, currency_symbol: "", price: "0", regular_price: "0" },
       totals: { currency_minor_unit: 2, currency_symbol: "", line_subtotal: "0" },
     };
     let optimisticCart: StoreApiCart | null;
