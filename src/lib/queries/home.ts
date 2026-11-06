@@ -34,11 +34,17 @@ export interface BestSellerProduct extends ProductCardFields {
 }
 
 // The homepage's "Best Sellers" section — real products from the admin-managed "bestsellers" category.
+// No typeIn filter here on purpose: one product in this category ("Essential Grooming Kit") has a broken/
+// missing WooCommerce product_type taxonomy term on the backend, so typeIn's allow-list tax_query silently
+// drops it even though it resolves as a normal SimpleProduct (confirmed directly against the live GraphQL
+// endpoint). This category is small and admin-curated with no subscription products in it, so skipping the
+// filter here is safe — unlike the full catalog, where an unrelated subscription product crashes the
+// unfiltered query entirely (a separate backend bug, see src/lib/queries/category.ts).
 const GET_BEST_SELLERS = `
   ${PRODUCT_CARD_FIELDS}
   query GetBestSellers {
     productCategory(id: "bestsellers", idType: SLUG) {
-      products(first: 12, where: { typeIn: [SIMPLE, VARIABLE] }) {
+      products(first: 12) {
         nodes {
           ...ProductCardFields
           productCategories(first: 1) {

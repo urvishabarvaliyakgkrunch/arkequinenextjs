@@ -82,7 +82,13 @@ interface CartState {
   confirmedPlans: Record<string, SubscriptionPlan>;
   applyingPlans: boolean;
   hydrate: () => Promise<void>;
-  addItem: (id: number, name: string, image?: string, quantity?: number) => Promise<void>;
+  addItem: (
+    id: number,
+    name: string,
+    image?: string,
+    quantity?: number,
+    plan?: SubscriptionPlan,
+  ) => Promise<void>;
   updateQuantity: (key: string, quantity: number) => Promise<void>;
   removeItem: (key: string) => Promise<void>;
   applyCoupon: (code: string) => Promise<void>;
@@ -161,7 +167,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   // Optimistic: the real backend add-item round trip is ~3s (see PROJECT-CONTEXT.md), so the badge
   // count/toast/checkmark/mini-cart row update instantly here and the real request runs in the
   // background. Only revert (count + toast + mini-cart row) if the backend actually rejects it.
-  addItem: async (id, name, image, quantity = 1) => {
+  addItem: async (id, name, image, quantity = 1, plan) => {
     const prevCart = get().cart;
     const prevCount = get().lastKnownCount;
     const optimisticCount = prevCount + quantity;
@@ -212,6 +218,20 @@ export const useCartStore = create<CartState>((set, get) => ({
       const cart = await enqueueMutation(() => apiAddToCart(id, quantity));
       persistCount(cart.items_count);
       persistCart(cart);
+      // The product page already picked a plan (its quantity already matches planToQuantity(plan)) —
+      // record it as confirmed so the basket page's radios land on the right option immediately,
+      // instead of falling back to quantityToPlan() which can't tell "monthly" apart from "one-time".
+      if (plan && plan !== "one_time") {
+        const addedItem = cart.items.find((i) => i.id === id);
+        if (addedItem) {
+          set((s) => ({
+            cart,
+            lastKnownCount: cart.items_count,
+            confirmedPlans: { ...s.confirmedPlans, [addedItem.key]: plan },
+          }));
+          return;
+        }
+      }
       set({ cart, lastKnownCount: cart.items_count });
     } catch (err) {
       // Only revert to the pre-click snapshot if nothing else has changed the cart since — otherwise

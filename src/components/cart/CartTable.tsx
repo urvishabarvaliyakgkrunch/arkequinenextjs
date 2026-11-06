@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCartStore, getConfirmedPlan, type SubscriptionPlan } from "@/store/cart";
 import { formatMoney, type StoreApiCart, type StoreApiCartItem } from "@/lib/storeApi";
+import { formatEuro, subscriptionDiscountedPrice } from "@/lib/subscriptionPricing";
 
 // Matches ark-equine.com/basket/'s table.shop_table — 13px body text, uppercase bold 12px headers,
 // #E1E1E1 borders, measured live via computed styles.
@@ -142,10 +143,10 @@ function SubscriptionPriceOptions({ item }: { item: StoreApiCartItem }) {
     useCartStore((s) => s.selectedPlans[item.key]) ??
     getConfirmedPlan(confirmedPlans, item.key, item.quantity);
 
-  const oneTime = Number(item.prices.price) / 10 ** item.prices.currency_minor_unit;
-  const discounted = (oneTime * 0.9).toFixed(item.prices.currency_minor_unit);
   const oneTimeLabel = formatMoney(item.prices.price, item.prices);
-  const discountedLabel = `${item.prices.currency_symbol}${discounted}`;
+  // Store API's item price is already the per-unit amount in minor units — reuse the same
+  // one-source-of-truth helper the product page uses so the % and rounding never drift apart.
+  const discountedLabel = formatEuro(subscriptionDiscountedPrice(oneTimeLabel));
 
   return (
     <fieldset>

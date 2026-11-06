@@ -2,7 +2,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useCartStore } from "@/store/cart";
+import { useCartStore, planToQuantity, type SubscriptionPlan } from "@/store/cart";
+import { subscriptionDiscountedPrice, formatEuro, GUEST_SUBSCRIPTION_DISCOUNT_PERCENT } from "@/lib/subscriptionPricing";
 import type { ProductPageData } from "@/types/product";
 
 // Quantity box and button; adds through the shared cart store, so the header basket and toast update too.
@@ -14,6 +15,9 @@ export default function AddToCartForm({ product }: { product: ProductPageData })
   const [quantity, setQuantity] = useState(1);
   // The value picked in each attribute dropdown so far, e.g. { size: "Aquatabs Inline Cartridge" }
   const [selected, setSelected] = useState<Record<string, string>>({});
+  // Matches the live product page: "Buy Now" (full price) vs "Subscribe to save 10%" (Deliver: dropdown)
+  const [purchaseType, setPurchaseType] = useState<"buy_now" | "subscribe">("subscribe");
+  const [deliverPlan, setDeliverPlan] = useState<Extract<SubscriptionPlan, "monthly" | "every_3_months">>("monthly");
   const addItem = useCartStore((s) => s.addItem);
 
   const isVariable = product.type === "VariableProduct";
@@ -53,6 +57,60 @@ export default function AddToCartForm({ product }: { product: ProductPageData })
     return <p className="mb-[5px] font-bold text-red-700">Out of stock</p>;
   }
 
+  // Variable products only know their real price once a variation is matched
+  const activePriceFormatted = isVariable ? matchedVariation?.price : product.price;
+  const discountedPrice = activePriceFormatted ? subscriptionDiscountedPrice(activePriceFormatted) : 0;
+  const discountedLabel = formatEuro(discountedPrice);
+
+  // "Buy Now" = full price, quantity 1 per click. "Subscribe" = the picked delivery scheme sets both
+  // the per-unit discounted price and the real cart quantity (every-3-months ships 3 units at once,
+  // matching the live site's "3 items" wording and WooCommerce Subscriptions' own cart behavior).
+  const plan: SubscriptionPlan = purchaseType === "subscribe" ? deliverPlan : "one_time";
+  const finalQuantity = quantity * planToQuantity(plan);
+
+  // Matches the live site's radio + "Deliver:" dropdown above the quantity box
+  const purchaseOptions = activePriceFormatted ? (
+    <fieldset className="mb-[15px]">
+      <legend className="sr-only">Purchase option</legend>
+      <label className="mb-[8px] flex items-center gap-2 text-[15px] text-secondary">
+        <input
+          type="radio"
+          name="purchase-type"
+          checked={purchaseType === "buy_now"}
+          onChange={() => setPurchaseType("buy_now")}
+        />
+        Buy Now
+      </label>
+      <label className="mb-[8px] flex items-center gap-2 text-[15px] text-secondary">
+        <input
+          type="radio"
+          name="purchase-type"
+          checked={purchaseType === "subscribe"}
+          onChange={() => setPurchaseType("subscribe")}
+        />
+        Subscribe to save {GUEST_SUBSCRIPTION_DISCOUNT_PERCENT}%
+      </label>
+
+      {purchaseType === "subscribe" && (
+        <div className="mt-[10px]">
+          <p className="mb-[6px] text-[13px] font-semibold text-secondary">Deliver:</p>
+          <select
+            value={deliverPlan}
+            onChange={(e) => setDeliverPlan(e.target.value as typeof deliverPlan)}
+            className="h-[43px] w-full border border-[#e1e1e1] bg-white px-[10px] text-[14px] text-meta"
+          >
+            <option value="monthly">
+              Every month for {discountedLabel} ({GUEST_SUBSCRIPTION_DISCOUNT_PERCENT}% off) Billed and shipped each month
+            </option>
+            <option value="every_3_months">
+              Every 3 months for {discountedLabel} ({GUEST_SUBSCRIPTION_DISCOUNT_PERCENT}% off) 3 items Billed and shipped every 3 months (save on postage)
+            </option>
+          </select>
+        </div>
+      )}
+    </fieldset>
+  ) : null;
+
   // Shared quantity +/- box and "Add to basket" button, used both inside and outside the variation box
   const quantityAndAddButton = (
     <div className="mb-[5px] flex items-start">
@@ -86,7 +144,10 @@ export default function AddToCartForm({ product }: { product: ProductPageData })
         type="button"
         // Variable product: wait until a variation is matched before letting the shopper add it
         disabled={isPending || (isVariable && !matchedVariation)}
-        onClick={() => cartItemId && addItem(cartItemId, product.name, cartItemImage, quantity).catch(() => {})}
+        onClick={() =>
+          cartItemId &&
+          addItem(cartItemId, product.name, cartItemImage, finalQuantity, plan).catch(() => {})
+        }
         className="h-[42px] cursor-pointer rounded-[2px] bg-primary px-[15px] text-xs text-white transition-colors duration-300 ease-out hover:bg-secondary disabled:cursor-wait disabled:opacity-70"
       >
         {isPending ? "Adding…" : "Add to basket"}
@@ -126,18 +187,17 @@ export default function AddToCartForm({ product }: { product: ProductPageData })
 
           {/* Only the picked variation has one exact price — show it once every dropdown is filled */}
           {matchedVariation && (
-            <p className="mb-[15px] text-[15px] font-bold leading-6 text-primary">
-              {matchedVariation.price}
-              <small className="text-[12px]">
-                {" "}— or subscribe to save <span className="text-[15px]">10%</span>
-              </small>
-            </p>
+            <p className="mb-[15px] text-[15px] font-bold leading-6 text-primary">{matchedVariation.price}</p>
           )}
 
+          {matchedVariation && purchaseOptions}
           {quantityAndAddButton}
         </div>
       ) : (
-        quantityAndAddButton
+        <>
+          {purchaseOptions}
+          {quantityAndAddButton}
+        </>
       )}
 
       <button

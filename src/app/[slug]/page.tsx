@@ -21,7 +21,7 @@ export async function generateStaticParams() {
 
 export default async function CategorySlugPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const data = await getCategoryPageData(slug, { first: 100 });
+  const data = await getCategoryPageData(slug, { first: 100, orderby: { field: "NAME", order: "ASC" } });
 
   if (data.productCategory) {
     const { name, image, products } = data.productCategory;

@@ -16,7 +16,7 @@ export async function generateStaticParams() {
 
 export default async function ProductCategoryPage({ params }: { params: Promise<{ category: string }> }) {
   const { category } = await params;
-  const data = await getCategoryPageData(category, { first: 15 });
+  const data = await getCategoryPageData(category, { first: 15, orderby: { field: "NAME", order: "ASC" } });
 
   if (!data.productCategory) {
     notFound();

@@ -2,9 +2,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ProductCardFields } from "@/types/product";
-import { stripHtml } from "@/lib/stripHtml";
+import { stripHtml, truncateWords } from "@/lib/stripHtml";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import AddToCartOverlay from "@/components/cart/AddToCartOverlay";
+import { GUEST_SUBSCRIPTION_DISCOUNT_PERCENT } from "@/lib/subscriptionPricing";
 
 // Shared by the shop page and every category page — one card design, used everywhere products are listed.
 // priority = above-the-fold image. purchasable=false is for static placeholder cards whose product is not in WooCommerce yet.
@@ -18,7 +19,7 @@ export default function ProductCard({
   purchasable?: boolean;
 }) {
   const hasSale = Boolean(product.salePrice) && product.salePrice !== product.regularPrice;
-  const description = stripHtml(product.shortDescription);
+  const description = truncateWords(stripHtml(product.shortDescription), 15);
   // Live site renders price ranges with an en dash
   const price = product.price?.replace(" - ", " – ");
   // Variable products need a variation chosen first (live site shows "Select options") — only simple products add straight to cart.
@@ -71,7 +72,8 @@ export default function ProductCard({
                 server-side per visitor and isn't exposed via GraphQL, but guests always see the 10% default. */}
             {hasPrice ? (
               <span className="text-[12px]">
-                {" "}— or subscribe to save <span className="text-[15px]">10%</span>
+                {" "}— or subscribe to save{" "}
+                <span className="text-[15px]">{GUEST_SUBSCRIPTION_DISCOUNT_PERCENT}%</span>
               </span>
             ) : null}
           </div>

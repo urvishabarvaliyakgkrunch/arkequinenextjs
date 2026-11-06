@@ -1,6 +1,7 @@
 // src/components/product/ProductSummary.tsx
 import AddToCartForm from "@/components/product/AddToCartForm";
 import ProductMeta from "@/components/product/ProductMeta";
+import { GUEST_SUBSCRIPTION_DISCOUNT_PERCENT } from "@/lib/subscriptionPricing";
 import type { ProductPageData } from "@/types/product";
 
 // Right side of the page: title, price, short text, buy box, meta
@@ -20,7 +21,8 @@ export default function ProductSummary({ product }: { product: ProductPageData }
           {product.price}
           {/* Guests always see the subscription plugin's 10% default, same as the shop cards */}
           <small className="text-[12px]">
-            {" "}— or subscribe to save <span className="text-[15px]">10%</span>
+            {" "}— or subscribe to save{" "}
+            <span className="text-[15px]">{GUEST_SUBSCRIPTION_DISCOUNT_PERCENT}%</span>
           </small>
         </p>
       )}

@@ -8,6 +8,7 @@ import { BEST } from "@/components/landing/landingData";
 import { stripHtml, truncateWords } from "@/lib/stripHtml";
 import type { BestSellerProduct } from "@/lib/queries/home";
 import AddToCartButton from "@/components/cart/AddToCartButton";
+import { GUEST_SUBSCRIPTION_DISCOUNT_PERCENT } from "@/lib/subscriptionPricing";
 
 const ROUND_ADD = "flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-graphite text-[19px] text-white transition-all duration-300 ease-lt hover:scale-[1.08] hover:bg-teal";
 
@@ -30,8 +31,11 @@ function Price({ value, cls }: { value: string; cls: string }) {
 export default function LandingBest({ products }: { products: BestSellerProduct[] }) {
   // Falls back to the static sample set only when the backend's "bestsellers" category has nothing in it yet.
   const hasRealData = products.length > 0;
-  const hero = hasRealData ? products[0] : null;
-  const rest = hasRealData ? products.slice(1, 5) : [];
+  const sortedProducts = hasRealData
+    ? [...products].sort((a, b) => a.name.localeCompare(b.name))
+    : products;
+  const hero = hasRealData ? sortedProducts[0] : null;
+  const rest = hasRealData ? sortedProducts.slice(1, 5) : [];
 
   const cards = hasRealData
     ? rest.map((p, i) => (
@@ -54,7 +58,8 @@ export default function LandingBest({ products }: { products: BestSellerProduct[
                 <Price value={splitPrice(p.price)} cls="text-graphite" />
                 {/* Guest-facing default from the live site's subscription plugin (WCSATT) — matches shop page's ProductCard */}
                 <span className="text-[11px] text-[#9a9b9d]">
-                  — or subscribe to save <span className="font-semibold text-graphite">10%</span>
+                  — or subscribe to save{" "}
+                  <span className="font-semibold text-graphite">{GUEST_SUBSCRIPTION_DISCOUNT_PERCENT}%</span>
                 </span>
               </div>
               {p.__typename === "SimpleProduct" ? (
@@ -91,7 +96,8 @@ export default function LandingBest({ products }: { products: BestSellerProduct[
               <div className="flex flex-col gap-[3px]">
                 <Price value={c.price} cls="text-graphite" />
                 <span className="text-[11px] text-[#9a9b9d]">
-                  — or subscribe to save <span className="font-semibold text-graphite">10%</span>
+                  — or subscribe to save{" "}
+                  <span className="font-semibold text-graphite">{GUEST_SUBSCRIPTION_DISCOUNT_PERCENT}%</span>
                 </span>
               </div>
               <button type="button" aria-label={`Add ${c.name}`} className={ROUND_ADD}>+</button>
@@ -126,7 +132,8 @@ export default function LandingBest({ products }: { products: BestSellerProduct[
                 <span className="font-serif-lt text-[28px] font-normal">{hero ? splitPrice(hero.price) : BEST.hero.price}</span>
               </span>
               <span className="text-[11px] opacity-70">
-                — or subscribe to save <span className="font-semibold">10%</span>
+                — or subscribe to save{" "}
+                <span className="font-semibold">{GUEST_SUBSCRIPTION_DISCOUNT_PERCENT}%</span>
               </span>
             </div>
             {hero && hero.__typename === "SimpleProduct" ? (

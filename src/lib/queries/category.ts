@@ -9,7 +9,7 @@ import type { ProductsOrderby } from "@/lib/sorting";
 // requests (29 categories, then 6, same query) — fetch the full list and filter count > 0 ourselves instead.
 const GET_CATEGORY_PRODUCTS = `
   ${PRODUCT_CARD_FIELDS}
-  query GetCategoryProducts($slug: ID!, $first: Int!, $orderby: [ProductsOrderbyInput]) {
+  query GetCategoryProducts($slug: ID!, $first: Int!, $orderby: [ProductsOrderbyInput], $typeIn: [ProductTypesEnum]) {
     productCategory(id: $slug, idType: SLUG) {
       name
       slug
@@ -18,7 +18,7 @@ const GET_CATEGORY_PRODUCTS = `
         sourceUrl(size: LARGE)
         altText
       }
-      products(first: $first, where: { typeIn: [SIMPLE, VARIABLE], orderby: $orderby }) {
+      products(first: $first, where: { typeIn: $typeIn, orderby: $orderby }) {
         nodes {
           ...ProductCardFields
         }
@@ -43,9 +43,9 @@ const GET_CATEGORY_PRODUCTS = `
 
 const GET_CATEGORY_PRODUCTS_ONLY = `
   ${PRODUCT_CARD_FIELDS}
-  query GetCategoryProductsOnly($slug: ID!, $first: Int!, $orderby: [ProductsOrderbyInput]) {
+  query GetCategoryProductsOnly($slug: ID!, $first: Int!, $orderby: [ProductsOrderbyInput], $typeIn: [ProductTypesEnum]) {
     productCategory(id: $slug, idType: SLUG) {
-      products(first: $first, where: { typeIn: [SIMPLE, VARIABLE], orderby: $orderby }) {
+      products(first: $first, where: { typeIn: $typeIn, orderby: $orderby }) {
         nodes {
           ...ProductCardFields
         }
@@ -53,6 +53,17 @@ const GET_CATEGORY_PRODUCTS_ONLY = `
     }
   }
 `;
+
+// The backend's "bestsellers" category has a product whose WooCommerce `product_type` taxonomy term is
+// broken/missing (confirmed directly against the live GraphQL endpoint) — WPGraphQL's typeIn filter
+// (an allow-list tax_query) silently drops it even though it resolves as a normal SimpleProduct everywhere
+// else. Every other category still needs typeIn: an unrelated WooCommerce Subscriptions product elsewhere
+// in the catalog makes the *unfiltered* products() field return null entirely (a backend bug, not ours),
+// so typeIn must stay on for every category except this one known-safe exception.
+const TYPE_FILTERED_PRODUCT_TYPES = ["SIMPLE", "VARIABLE"];
+function typeInFor(slug: string): string[] | null {
+  return slug === "bestsellers" ? null : TYPE_FILTERED_PRODUCT_TYPES;
+}
 
 // Lighter call used when the visitor changes sort / per-page on the (static) category page.
 export async function getCategoryProductsOnly(
@@ -62,7 +73,7 @@ export async function getCategoryProductsOnly(
   const { first = 15, orderby = null } = options;
   const data = await gql<{ productCategory: { products: { nodes: ProductCardFields[] } } | null }>(
     GET_CATEGORY_PRODUCTS_ONLY,
-    { slug, first, orderby: orderby ? [orderby] : null },
+    { slug, first, orderby: orderby ? [orderby] : null, typeIn: typeInFor(slug) },
     { revalidate: 3600 }
   );
   return data.productCategory?.products.nodes ?? null;
@@ -89,7 +100,7 @@ export async function getCategoryPageData(
   const { first = 15, orderby = null } = options;
   return gql<CategoryPageData>(
     GET_CATEGORY_PRODUCTS,
-    { slug, first, orderby: orderby ? [orderby] : null },
+    { slug, first, orderby: orderby ? [orderby] : null, typeIn: typeInFor(slug) },
     { revalidate: 3600 }
   );
 }
