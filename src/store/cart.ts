@@ -82,6 +82,7 @@ interface CartState {
   confirmedPlans: Record<string, SubscriptionPlan>;
   applyingPlans: boolean;
   hydrate: () => Promise<void>;
+  hydrateIfActive: () => Promise<void>;
   addItem: (id: number, name: string, image?: string, quantity?: number) => Promise<void>;
   updateQuantity: (key: string, quantity: number) => Promise<void>;
   removeItem: (key: string) => Promise<void>;
@@ -157,6 +158,10 @@ export const useCartStore = create<CartState>((set, get) => ({
       });
     return hydrating;
   },
+
+  // Header calls this on every page: a visitor who never added anything has nothing to sync, so skip
+  // the /api/cart function run + WordPress request. addItem fetches its own nonce, so the first add still works.
+  hydrateIfActive: () => (get().lastKnownCount > 0 ? get().hydrate() : Promise.resolve()),
 
   // Optimistic: the real backend add-item round trip is ~3s (see PROJECT-CONTEXT.md), so the badge
   // count/toast/checkmark/mini-cart row update instantly here and the real request runs in the

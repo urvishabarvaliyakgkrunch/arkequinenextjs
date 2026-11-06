@@ -10,7 +10,7 @@ import { useCartStore } from "@/store/cart";
 export default function CartIcon() {
   const cart = useCartStore((s) => s.cart);
   const lastKnownCount = useCartStore((s) => s.lastKnownCount);
-  const hydrate = useCartStore((s) => s.hydrate);
+  const hydrate = useCartStore((s) => s.hydrateIfActive);
 
   useEffect(() => {
     hydrate().catch(() => {});
