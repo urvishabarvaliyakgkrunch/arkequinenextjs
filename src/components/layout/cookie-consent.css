@@ -1,0 +1,82 @@
+/* Matches the live site's WPConsent banner palette */
+#cc-main {
+  --cc-bg: #04194e;
+  --cc-primary-color: #ffffff;
+  --cc-secondary-color: #ffffff;
+  --cc-footer-bg: #04194e;
+  --cc-footer-color: #ffffff;
+  --cc-footer-border-color: rgba(255, 255, 255, 0.2);
+  --cc-separator-border-color: rgba(255, 255, 255, 0.2);
+  --cc-overlay-bg: rgba(4, 25, 78, 0.65);
+
+  --cc-btn-primary-bg: #ffcd2a;
+  --cc-btn-primary-border-color: #ffcd2a;
+  --cc-btn-primary-color: #000000;
+  --cc-btn-primary-hover-bg: #f0bf14;
+  --cc-btn-primary-hover-border-color: #f0bf14;
+  --cc-btn-primary-hover-color: #000000;
+
+  --cc-btn-secondary-bg: #ffffff;
+  --cc-btn-secondary-border-color: #ffffff;
+  --cc-btn-secondary-color: #000000;
+  --cc-btn-secondary-hover-bg: #e5e5e5;
+  --cc-btn-secondary-hover-border-color: #e5e5e5;
+  --cc-btn-secondary-hover-color: #000000;
+
+  --cc-cookie-category-block-bg: transparent;
+  --cc-cookie-category-block-border: transparent;
+  --cc-cookie-category-block-hover-bg: rgba(255, 255, 255, 0.05);
+  --cc-cookie-category-block-hover-border: transparent;
+  --cc-cookie-category-expanded-block-bg: transparent;
+  --cc-cookie-category-expanded-block-hover-bg: rgba(255, 255, 255, 0.05);
+
+  --cc-toggle-on-bg: #ffcd2a;
+  --cc-toggle-off-bg: #ffffff;
+  --cc-toggle-readonly-bg: #8aa0c9;
+
+  --cc-btn-border-radius: 2px;
+  --cc-modal-border-radius: 6px;
+}
+
+#cc-main .pm-body #pm-pills[data-nosnippet] {
+  background: #04194e;
+}
+
+/* Force all three buttons (Accept All / Reject / Preferences) onto a single row,
+   matching the live WPConsent banner instead of the library's stacked default. */
+#cc-main .cm__btns {
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: none !important;
+}
+
+#cc-main .cm__btn-group {
+  flex-direction: row !important;
+}
+
+#cc-main .cm__btn-group + .cm__btn-group {
+  margin: 0 !important;
+}
+
+#cc-main .cm__btn {
+  min-width: auto;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+/* Flat, undivided category rows (just a thin bottom border) like the live WPConsent modal,
+   instead of the library's default boxed/rounded cards. */
+#cc-main .pm__section {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--cc-separator-border-color);
+  margin: 0;
+  padding: 1rem 0;
+}
+
+#cc-main .pm__section-title-wrapper {
+  padding: 0;
+}

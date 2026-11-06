@@ -63,6 +63,7 @@ export default function ProductCard({
                 <span className="text-ark-price-strike line-through">
                   {product.regularPrice}
                 </span>
+                <span aria-hidden="true">•</span>
                 <span>{product.salePrice}</span>
               </>
             ) : (
