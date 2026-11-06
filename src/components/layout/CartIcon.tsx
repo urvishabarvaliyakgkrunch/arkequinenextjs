@@ -4,6 +4,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/lib/storeApi";
+import CheckoutLink from "@/components/cart/CheckoutLink";
 import { useCartStore } from "@/store/cart";
 
 // Header basket: reads the same cart store as the add-to-cart buttons and the /cart page, so every page stays in sync.
@@ -101,7 +102,7 @@ export default function CartIcon() {
               </p>
               <div className="flex bg-[#e1e1e1] text-[13px] font-bold text-ink-dark">
                 <Link href="/basket/" className="flex-1 py-[14px] text-center">View basket</Link>
-                <a href={`${process.env.NEXT_PUBLIC_WP_URL}/checkout/`} className="flex-1 py-[14px] text-center">Checkout</a>
+                <CheckoutLink className="flex-1 py-[14px] text-center">Checkout</CheckoutLink>
               </div>
             </>
           )}

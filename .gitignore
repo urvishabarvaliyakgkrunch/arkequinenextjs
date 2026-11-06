@@ -43,5 +43,8 @@ next-env.d.ts
 # Internal working docs (clauderules §0.3) — never committed
 PROJECT-CONTEXT.md
 PERFORMANCE-REPORT.md
+CHECKOUT-CONTEXT.md
 scratch-ark-subscription-plan-backend-snippet.php
-ark-headless-cart-plugin.php
+
+# Backend WordPress plugins (internal hand-off, not part of the Next.js app)
+backend-plugin/
